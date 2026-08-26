@@ -45,9 +45,10 @@
       <div class="field">
               <label>Format</label>
               <div class="format-toggle" id="formatToggle">
-                <button type="button" class="fmt-btn active" data-fmt="card">SD Cover</button>
-                <button type="button" class="fmt-btn" data-fmt="box">Game Case</button>
-              </div>
+                        <button type="button" class="fmt-btn active" data-fmt="card">SD Cover</button>
+                        <button type="button" class="fmt-btn" data-fmt="box">Game Case</button>
+                        <button type="button" class="fmt-btn" data-fmt="custom">Custom</button>
+                      </div>
             </div>
 
             <div class="field">
@@ -67,7 +68,7 @@
                 <span class="icon">🖼️</span>
                 <span class="txt" id="uploadTxt"><b>Click</b> or drag an image here</span>
               </div>
-              <div class="hint">Recommended: square image, minimum 800×800px.</div>
+              <div class="hint">Use a landscape game cover; it adapts to both formats. Minimum 800×480.</div>
             </div>
 
       <div class="field card-only">
@@ -87,28 +88,60 @@
       </div>
 
       <div class="field card-only">
-        <label>Accent color</label>
-        <div class="swatches" id="swatches">
-          <div class="swatch active" style="background:#8b2fd6;color:#8b2fd6" data-color="#8b2fd6,#c98bff"></div>
-          <div class="swatch" style="background:#1fa7d6;color:#1fa7d6" data-color="#1265a8,#5ec7f2"></div>
-          <div class="swatch" style="background:#e0364f;color:#e0364f" data-color="#a3132a,#ff6b7e"></div>
-          <div class="swatch" style="background:#2fae6a;color:#2fae6a" data-color="#0f7a41,#7fe6ab"></div>
-          <div class="swatch" style="background:#e08a1f;color:#e08a1f" data-color="#b5610a,#ffc266"></div>
-          <div class="swatch" style="background:#3a3f4a;color:#3a3f4a" data-color="#1c1f26,#7d8697"></div>
-        </div>
-      </div>
+              <label>Accent color</label>
+              <div class="swatches" id="swatches">
+                <div class="swatch active" style="background:#8b2fd6;color:#8b2fd6" data-color="#8b2fd6,#c98bff"></div>
+                <div class="swatch" style="background:#1fa7d6;color:#1fa7d6" data-color="#1265a8,#5ec7f2"></div>
+                <div class="swatch" style="background:#e0364f;color:#e0364f" data-color="#a3132a,#ff6b7e"></div>
+                <div class="swatch" style="background:#2fae6a;color:#2fae6a" data-color="#0f7a41,#7fe6ab"></div>
+                <div class="swatch" style="background:#e08a1f;color:#e08a1f" data-color="#b5610a,#ffc266"></div>
+                <div class="swatch" style="background:#3a3f4a;color:#3a3f4a" data-color="#1c1f26,#7d8697"></div>
+              </div>
+            </div>
 
-      <button class="btn-download" id="downloadBtn">⬇ Download Cover PNG</button>
+            <div class="field custom-only">
+              <label>Overlay</label>
+              <div class="upload-zone" id="overlayZone">
+                <input type="file" id="overlayInput" accept="image/*">
+                <span class="icon">🖼️</span>
+                <span class="txt" id="overlayTxt"><b>Default</b> — fbsgames case</span>
+              </div>
+              <div class="hint">The frame drawn above the artwork. Defaults to the fbsgames game case.</div>
+            </div>
+
+            <div class="field custom-only">
+              <label>Artwork</label>
+              <div class="range-row">
+                <div class="range-field">
+                  <label>Scale</label>
+                  <input type="range" id="artScale" min="50" max="250" value="100">
+                  <span class="range-val" id="artScaleVal">100%</span>
+                </div>
+                <div class="range-row-2">
+                  <div class="range-field">
+                    <label>X offset</label>
+                    <input type="range" id="artX" min="-400" max="400" value="0">
+                  </div>
+                  <div class="range-field">
+                    <label>Y offset</label>
+                    <input type="range" id="artY" min="-400" max="400" value="0">
+                  </div>
+                </div>
+              </div>
+              <div class="hint">Scale and position the artwork under the overlay. Drag the 4 corner dots on the canvas to fit the overlay window.</div>
+            </div>
+
+            <button class="btn-download" id="downloadBtn">⬇ Download Cover PNG</button>
     </div>
 
     <!-- PREVIEW -->
         <div class="preview-col">
           <div class="canvas-shell" data-fmt="card">
-            <canvas id="cardCanvas" width="1024" height="1230"></canvas>
-            <canvas id="boxCanvas" width="1024" height="1536"></canvas>
-            <p class="credit">Thanks to <b>fbsgames</b> for the game case template</p>
-          </div>
-          <div class="preview-note">Live preview — updates as you type</div>
+                      <canvas id="cardCanvas" width="1024" height="1230"></canvas>
+                      <canvas id="boxCanvas" width="1024" height="1536"></canvas>
+                      <canvas id="customCanvas" width="1024" height="1536"></canvas>
+                      <p class="credit">Thanks to <b>fbsgames</b> for the game case template</p>
+                    </div>
         </div>
 
   </div>
@@ -116,6 +149,7 @@
 
 <script src="js/card-render.js"></script>
 <script src="js/case-render.js"></script>
+<script src="js/custom-render.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@
 
   const { draw, state } = window.CardRender;
   const CaseRender = window.CaseRender;
+  const CustomRender = window.CustomRender;
 
   const panel = document.querySelector('.panel');
     const canvasShell = document.querySelector('.canvas-shell');
@@ -38,23 +39,26 @@
   }
 
   function setFormat(next){
-    format = next;
-    formatToggle.querySelectorAll('.fmt-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.fmt === format);
-    });
-    canvasShell.dataset.fmt = format;
-    panel.classList.toggle('format-box', format === 'box');
-    redraw();
-  }
-
-  function redraw(){
-    syncFromInputs();
-    if (format === 'box'){
-      CaseRender.render();
-    } else {
-      draw();
+      format = next;
+      formatToggle.querySelectorAll('.fmt-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.fmt === format);
+      });
+      canvasShell.dataset.fmt = format;
+      panel.classList.toggle('format-box', format === 'box');
+      panel.classList.toggle('format-custom', format === 'custom');
+      redraw();
     }
-  }
+
+    function redraw(){
+      syncFromInputs();
+      if (format === 'box'){
+        CaseRender.render();
+      } else if (format === 'custom'){
+        CustomRender.render();
+      } else {
+        draw();
+      }
+    }
 
   // ---- image upload ----
   function handleFile(file){
@@ -103,13 +107,20 @@
   });
 
   document.getElementById('downloadBtn').addEventListener('click', () => {
-      const name = (titleInput.value || 'cover').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'_') || 'cover';
-      const canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
-      const link = document.createElement('a');
-      link.download = name + '.png';
-      link.href = document.getElementById(canvasId).toDataURL('image/png');
-      link.click();
-    });
+          const name = (titleInput.value || 'cover').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'_') || 'cover';
+          let url;
+          if (format === 'custom'){
+            // exporta sin las guías de las esquinas
+            url = CustomRender.cleanDataURL();
+          } else {
+            const canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
+            url = document.getElementById(canvasId).toDataURL('image/png');
+          }
+          const link = document.createElement('a');
+          link.download = name + '.png';
+          link.href = url;
+          link.click();
+        });
 
     // ---- buscador de carátulas ----
     function setSearchMsg(msg){
@@ -212,8 +223,46 @@
     searchBtn.addEventListener('click', () => runSearch(searchInput.value));
     searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(searchInput.value); });
 
+    // ---- controles del formato custom ----
+    const artScale = document.getElementById('artScale');
+    const artScaleVal = document.getElementById('artScaleVal');
+    const artX = document.getElementById('artX');
+    const artY = document.getElementById('artY');
+    const overlayInput = document.getElementById('overlayInput');
+    const overlayZone = document.getElementById('overlayZone');
+    const overlayTxt = document.getElementById('overlayTxt');
+    const customState = CustomRender.state;
+
+    function applyArtSettings(){
+      customState.scale = parseInt(artScale.value,10) / 100;
+      customState.offX = parseInt(artX.value,10);
+      customState.offY = parseInt(artY.value,10);
+      artScaleVal.textContent = artScale.value + '%';
+      CustomRender.render();
+    }
+    artScale.addEventListener('input', applyArtSettings);
+    artX.addEventListener('input', applyArtSettings);
+    artY.addEventListener('input', applyArtSettings);
+
+    overlayInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          CustomRender.setOverlay(img);
+          overlayTxt.innerHTML = '<b>✓ ' + file.name + '</b>';
+          overlayZone.classList.add('has-image');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
     // estado inicial desde los inputs y primer render
     syncFromInputs();
     window.CardRender.init();
     CaseRender.init();
+    CustomRender.init();
 })();
