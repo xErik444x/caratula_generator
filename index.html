@@ -585,7 +585,7 @@ document.getElementById('swatches').addEventListener('click', e=>{
 document.getElementById('downloadBtn').addEventListener('click', ()=>{
   const link = document.createElement('a');
   const name = (titleInput.value||'cover').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'_') || 'cover';
-  link.download = name + '_R36S.png';
+  link.download = name + '.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
 });
