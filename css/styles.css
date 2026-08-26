@@ -175,6 +175,44 @@ input[type=text]::placeholder{color:#5c5280;}
   width:100%;accent-color:var(--violet-light);
 }
 
+.format-toggle{
+  display:flex;
+  gap:4px;
+  padding:4px;
+  background:#0d0a18;
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+.fmt-btn{
+  flex:1;
+  padding:10px 8px;
+  border:none;
+  border-radius:7px;
+  background:transparent;
+  color:var(--ink-dim);
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .15s, color .15s, box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fmt-btn:hover:not(.active){
+  color:var(--ink);
+}
+.fmt-btn.active{
+  background:linear-gradient(135deg, var(--violet-light), var(--violet));
+  color:#fff;
+  box-shadow:0 4px 14px rgba(139,47,214,0.35);
+}
+
+.panel.format-box .card-only{
+  opacity:0.45;
+  pointer-events:none;
+}
+
 .btn-download{
   width:100%;
   margin-top:24px;
@@ -210,13 +248,16 @@ input[type=text]::placeholder{color:#5c5280;}
   filter:drop-shadow(0 25px 45px rgba(0,0,0,0.55));
   max-width:100%;
 }
-#cardCanvas{
+#cardCanvas,
+#boxCanvas{
   width:100%;
   max-width:420px;
   height:auto;
   display:block;
   border-radius:22px;
 }
+.canvas-shell[data-fmt="card"] #boxCanvas{display:none;}
+.canvas-shell[data-fmt="box"] #cardCanvas{display:none;}
 .preview-note{
   margin-top:16px;
   font-size:12px;
@@ -242,7 +283,7 @@ input[type=text]::placeholder{color:#5c5280;}
   .panel{padding:16px;}
   .masthead h1{font-size:23px;}
   .subhead{font-size:13px;margin-bottom:22px;}
-  #cardCanvas{max-width:min(420px, 88vw);}
+  #cardCanvas, #boxCanvas{max-width:min(420px, 88vw);}
   .canvas-shell{filter:drop-shadow(0 14px 28px rgba(0,0,0,0.5));}
   .swatch{width:34px;height:34px;} /* blancos de toque mas comodos */
 }
