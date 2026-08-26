@@ -140,9 +140,12 @@
           }
 
           async function runSearch(q){
-            q = (q || '').trim();
-            if (!q) return;
-            setSearchMsg('Searching…');
+                      q = (q || '').trim();
+                      if (q.length < 4){
+                        setSearchMsg('Type at least 4 characters.');
+                        return;
+                      }
+                      setSearchMsg('Searching…');
             try{
               const res = await fetch(SEARCH_API + '?q=' + encodeURIComponent(q), { headers: { Accept: 'application/json' } });
               if (!res.ok) throw new Error('HTTP ' + res.status);
