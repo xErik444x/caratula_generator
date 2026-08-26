@@ -4,22 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>R36S · Cover Generator</title>
-<meta name="description" content="R36S Cover Generator — carga tu artwork, escribe el título y descarga una portada de juego en PNG. Generador de carátulas con vista previa en tiempo real.">
-<meta name="keywords" content="cover generator, game cover, carátula, download PNG, game artwork, R36S">
+<meta name="description" content="R36S Cover Generator - upload your artwork, type the game title and download a game cover as PNG. Real-time cover generator.">
+<meta name="keywords" content="cover generator, game cover, download PNG, game artwork, R36S">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://github.com/xErik444x/caratula_generator/blob/main/index.html">
 
 <!-- Open Graph (Facebook, LinkedIn, etc.) -->
 <meta property="og:site_name" content="R36S · Cover Generator">
 <meta property="og:title" content="R36S · Cover Generator">
-<meta property="og:description" content="Carga tu artwork, escribe el título y descarga una portada de juego en PNG. Vista previa en tiempo real.">
+<meta property="og:description" content="Upload your artwork, type the game title and download a game cover as PNG. Real-time cover generator.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://github.com/xErik444x/caratula_generator/blob/main/index.html">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="R36S · Cover Generator">
-<meta name="twitter:description" content="Generador de carátulas: sube tu arte, escribe título y descarga PNG. Vista previa en vivo.">
+<meta name="twitter:description" content="Upload your art, type the title and download a game cover PNG. Live preview.">
 
 <!-- Theme / UI -->
 <meta name="theme-color" content="#0a0710">
@@ -43,22 +43,32 @@
     <div class="panel">
 
       <div class="field">
-        <label>Formato</label>
-        <div class="format-toggle" id="formatToggle">
-          <button type="button" class="fmt-btn active" data-fmt="card">SD Cover</button>
-          <button type="button" class="fmt-btn" data-fmt="box">Game Case</button>
-        </div>
-      </div>
+              <label>Format</label>
+              <div class="format-toggle" id="formatToggle">
+                <button type="button" class="fmt-btn active" data-fmt="card">SD Cover</button>
+                <button type="button" class="fmt-btn" data-fmt="box">Game Case</button>
+              </div>
+            </div>
 
-      <div class="field">
-        <label>Game artwork</label>
-        <div class="upload-zone" id="dropZone">
-          <input type="file" id="artInput" accept="image/*">
-          <span class="icon">🖼️</span>
-          <span class="txt" id="uploadTxt"><b>Click</b> or drag an image here</span>
-        </div>
-        <div class="hint">Recommended: square image, minimum 800×800px.</div>
-      </div>
+            <div class="field">
+              <label>Artwork search</label>
+              <div class="search-row">
+                <input type="text" id="searchInput" placeholder="e.g. spiderman 2" autocomplete="off">
+                <button type="button" class="search-btn" id="searchBtn">🔍</button>
+              </div>
+              <div class="search-results" id="searchResults" hidden></div>
+              <div class="hint">Searches IGDB via the worker. Click a result to use it as artwork.</div>
+            </div>
+
+            <div class="field">
+              <label>Game artwork</label>
+              <div class="upload-zone" id="dropZone">
+                <input type="file" id="artInput" accept="image/*">
+                <span class="icon">🖼️</span>
+                <span class="txt" id="uploadTxt"><b>Click</b> or drag an image here</span>
+              </div>
+              <div class="hint">Recommended: square image, minimum 800×800px.</div>
+            </div>
 
       <div class="field card-only">
         <div class="field-head">

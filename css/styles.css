@@ -159,6 +159,85 @@ input[type=text]::placeholder{color:#5c5280;}
 .upload-zone .txt b{color:var(--violet-glow);}
 .upload-zone.has-image .txt{color:var(--accent-lime);}
 
+/* ---- buscador de carátulas ---- */
+.search-row{
+  display:flex;
+  gap:8px;
+}
+.search-row input[type=text]{
+  flex:1;
+}
+.search-btn{
+  border:none;
+  background:linear-gradient(135deg,var(--violet-light),var(--violet));
+  color:#fff;
+  border-radius:9px;
+  padding:0 16px;
+  font-size:16px;
+  cursor:pointer;
+  min-width:48px;
+  -webkit-tap-highlight-color:transparent;
+}
+.search-btn:active{transform:translateY(1px);}
+.search-results{
+  margin-top:10px;
+  max-height:300px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  scrollbar-width:thin;
+}
+.search-results[hidden]{display:none;}
+.sr-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#0d0a18;
+  cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.sr-item:hover{border-color:var(--violet-light);background:#150f28;}
+.sr-item img{
+  width:46px;
+  height:60px;
+  object-fit:cover;
+  border-radius:6px;
+  background:#1a1530;
+  flex-shrink:0;
+}
+.sr-item .thumb-missing{
+  width:46px;height:60px;
+  display:flex;align-items:center;justify-content:center;
+  background:#1a1530;border-radius:6px;color:var(--ink-dim);font-size:18px;
+  flex-shrink:0;
+}
+.sr-meta{min-width:0;}
+.sr-name{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  color:var(--ink);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.sr-sub{
+  font-size:11px;
+  color:var(--ink-dim);
+  margin-top:2px;
+  line-height:1.4;
+}
+.sr-msg{
+  font-size:12px;
+  color:var(--ink-dim);
+  text-align:center;
+  padding:8px;
+}
+
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 .swatches{display:flex;gap:9px;flex-wrap:wrap;}
