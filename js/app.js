@@ -181,25 +181,28 @@
                     thumb.onerror = () => { thumb.classList.add('is-missing'); };
                   }
                   const meta = document.createElement('div');
-                  meta.className = 'sr-meta';
-                  const nameEl = document.createElement('div');
-                  nameEl.className = 'sr-name';
-                  nameEl.textContent = item.name;
-                  const subEl = document.createElement('div');
-                  subEl.className = 'sr-sub';
-                  subEl.textContent = [platform, year ? '· ' + year : ''].filter(Boolean).join(' ');
-                  meta.appendChild(nameEl);
-                  meta.appendChild(subEl);
-                  el.appendChild(thumb);
-                  el.appendChild(meta);
-                  el.addEventListener('click', () => {
-                    if (item.cover){
-                      loadCoverAsArt(item.cover, item.name);
-                    } else {
-                      setSearchMsg('That game has no cover to use.');
-                    }
-                  });
-                  searchResults.appendChild(el);
+                                    meta.className = 'sr-meta';
+                                    const nameEl = document.createElement('div');
+                                    nameEl.className = 'sr-name';
+                                    nameEl.textContent = item.name;
+                                    const subEl = document.createElement('div');
+                                    subEl.className = 'sr-sub';
+                                    subEl.textContent = [platform, year ? '· ' + year : ''].filter(Boolean).join(' ');
+                                    meta.appendChild(nameEl);
+                                    meta.appendChild(subEl);
+                                    el.appendChild(thumb);
+                                    el.appendChild(meta);
+                                    // sin portada: se deja ver pero no se puede clickear (así la lista no se cierra)
+                                    if (!item.cover){
+                                      el.classList.add('no-cover');
+                                      const tag = document.createElement('span');
+                                      tag.className = 'sr-no-cover';
+                                      tag.textContent = 'No cover';
+                                      el.appendChild(tag);
+                                    } else {
+                                      el.addEventListener('click', () => loadCoverAsArt(item.cover, item.name));
+                                    }
+                                    searchResults.appendChild(el);
                 });
       }catch(err){
         setSearchMsg('Search error: ' + err.message);

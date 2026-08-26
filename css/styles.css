@@ -238,6 +238,25 @@ input[type=text]::placeholder{color:#5c5280;}
   padding:8px;
 }
 
+/* resultado sin portada: se ve pero no es clickeable (la lista no se cierra) */
+.sr-item.no-cover{
+  opacity:.55;
+  cursor:default;
+  pointer-events:none;
+}
+.sr-item.no-cover:hover{border-color:var(--line);background:#0d0a18;}
+.sr-no-cover{
+  margin-left:auto;
+  flex-shrink:0;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:var(--ink-dim);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:2px 6px;
+}
+
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 .swatches{display:flex;gap:9px;flex-wrap:wrap;}
