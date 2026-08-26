@@ -91,10 +91,10 @@
 
   // ---- valores iniciales (esquinas reales del case, igual que case-render.js) ----
   var q = [
-    [ 95,  172], // TL  (superior izquierda)
-    [980,  212], // TR  (superior derecha)
-    [980, 1432], // BR  (inferior derecha)
-    [ 95, 1466]  // BL  (inferior izquierda)
+    [ 94,  108], // TL  (superior izquierda)
+    [1014, 164], // TR  (superior derecha)
+    [989, 1433], // BR  (inferior derecha)
+    [ 92, 1492]  // BL  (inferior izquierda)
   ];
   var outW = 1024, outH = 1536;
 
@@ -274,7 +274,7 @@
     try{ document.execCommand('copy'); }catch(e){}
   });
   document.getElementById('btnReset').addEventListener('click', function(){
-    q=[[95,172],[980,212],[980,1432],[95,1466]];
+    q=[[94,108],[1014,164],[989,1433],[92,1492]];
     outW=1024; outH=1536;
     document.getElementById('outW').value=outW;
     document.getElementById('outH').value=outH;

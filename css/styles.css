@@ -265,6 +265,17 @@ input[type=text]::placeholder{color:#5c5280;}
   text-align:center;
 }
 
+/* crédito al autor del template: solo se ve en Game Case */
+.credit{
+  display:none;
+  margin:12px auto 0;
+  font-size:11px;
+  color:var(--ink-dim);
+  text-align:center;
+}
+.credit b{color:var(--violet-glow);font-weight:600;}
+.canvas-shell[data-fmt="box"] .credit{display:block;}
+
 /* ---- responsive ---- */
 
 /* tablet / mobile: todo apilado en una columna */
