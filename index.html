@@ -43,6 +43,14 @@
     <div class="panel">
 
       <div class="field">
+        <label>Formato</label>
+        <div class="format-toggle" id="formatToggle">
+          <button type="button" class="fmt-btn active" data-fmt="card">SD Cover</button>
+          <button type="button" class="fmt-btn" data-fmt="box">Game Case</button>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Game artwork</label>
         <div class="upload-zone" id="dropZone">
           <input type="file" id="artInput" accept="image/*">
@@ -52,7 +60,7 @@
         <div class="hint">Recommended: square image, minimum 800×800px.</div>
       </div>
 
-      <div class="field">
+      <div class="field card-only">
         <div class="field-head">
           <label>Game title</label>
           <label class="toggle"><input type="checkbox" id="showTitle" checked> Show</label>
@@ -60,7 +68,7 @@
         <input type="text" id="titleInput" placeholder="GAME TITLE" maxlength="24" value="GAME TITLE">
       </div>
 
-      <div class="field">
+      <div class="field card-only">
         <div class="field-head">
           <label>Subtitle / info</label>
           <label class="toggle"><input type="checkbox" id="showSubtitle" checked> Show</label>
@@ -68,7 +76,7 @@
         <input type="text" id="subInput" placeholder="SUBTITLE / PORT INFO" maxlength="36" value="SUBTITLE / PORT INFO">
       </div>
 
-      <div class="field">
+      <div class="field card-only">
         <label>Accent color</label>
         <div class="swatches" id="swatches">
           <div class="swatch active" style="background:#8b2fd6;color:#8b2fd6" data-color="#8b2fd6,#c98bff"></div>
@@ -85,8 +93,9 @@
 
     <!-- PREVIEW -->
     <div class="preview-col">
-      <div class="canvas-shell">
+      <div class="canvas-shell" data-fmt="card">
         <canvas id="cardCanvas" width="1024" height="1230"></canvas>
+        <canvas id="boxCanvas" width="1024" height="1536"></canvas>
       </div>
       <div class="preview-note">Live preview — updates as you type</div>
     </div>
@@ -95,6 +104,7 @@
 </div>
 
 <script src="js/card-render.js"></script>
+<script src="js/case-render.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

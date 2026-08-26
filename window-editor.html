@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Window Editor · R36S Case</title>
+<style>
+  :root{
+    --bg:#0d0a18; --panel:#161129; --line:#33285a; --ink:#efe9ff;
+    --ink-dim:#9d90c2; --violet:#8b2fd6; --violet-light:#b165f7; --lime:#c7ea3f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;padding:22px;background:var(--bg);color:var(--ink);
+    font-family:'Segoe UI', system-ui, sans-serif;}
+  h1{font-size:20px;margin:0 0 4px;letter-spacing:.5px;}
+  .sub{color:var(--ink-dim);font-size:13px;margin:0 0 18px;}
+  .wrap{display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1200px;margin:0 auto;align-items:start;}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;}
+  #stageCanvas{max-width:100%;height:auto;border-radius:8px;}
+  .side{display:flex;flex-direction:column;gap:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--violet-light);margin:0 0 12px;}
+  .grid{display:grid;grid-template-columns:repeat(4,auto);gap:8px;align-items:center;font-size:12px;color:var(--ink-dim);}
+  .grid input{width:74px;background:#0d0a18;border:1px solid var(--line);color:var(--ink);
+    padding:7px;border-radius:8px;font-size:13px;font-family:monospace;}
+  .grid input:focus{outline:none;border-color:var(--violet-light);}
+  .grid b{color:var(--ink);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .fld{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;}
+  .fld input{width:90px;background:#0d0a18;border:1px solid var(--line);color:var(--ink);
+    padding:7px;border-radius:8px;font-size:13px;font-family:monospace;}
+  .lbl{font-size:11px;color:var(--ink-dim);letter-spacing:.5px;text-transform:uppercase;margin:14px 0 6px;}
+  button{background:linear-gradient(135deg,var(--violet-light),var(--violet));color:#fff;
+    border:none;padding:11px 14px;border-radius:9px;font-weight:700;font-size:13px;
+    cursor:pointer;letter-spacing:.5px;width:100%;}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-dim);margin-top:8px;}
+  #out{width:100%;height:150px;background:#0d0a18;border:1px solid var(--line);border-radius:8px;
+    color:var(--lime);font-family:monospace;font-size:12px;padding:10px;resize:vertical;white-space:pre;}
+  .copy{font-size:11px;color:var(--ink-dim);margin-top:6px;text-align:center;}
+  input[type=file]{font-size:12px;color:var(--ink-dim);}
+  .hint{font-size:12px;color:var(--ink-dim);line-height:1.5;margin-top:8px;}
+  .seg{display:flex;gap:14px;font-size:11px;color:var(--ink-dim);margin-bottom:4px;}
+  .k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<h1>Window Editor · R36S Game Case (4 esquinas)</h1>
+<p class="sub">Arrastrá los 4 vértices (TL, TR, BR, BL) para posicionar la ventana. Mapeo afín suave: la imagen se acomoda sin deformarse de más.</p>
+
+<div class="wrap">
+  <div class="stage">
+    <canvas id="stageCanvas"></canvas>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h2>Vértices (px del PNG 1024×1536)</h2>
+      <div class="grid">
+        <span></span><span><b>X</b></span><span><b>Y</b></span><span></span>
+        <span>TL</span><input id="TLx"><input id="TLy"><span>▲</span>
+        <span>TR</span><input id="TRx"><input id="TRy"><span>▲</span>
+        <span>BR</span><input id="BRx"><input id="BRy"><span>▼</span>
+        <span>BL</span><input id="BLx"><input id="BLy"><span>▼</span>
+      </div>
+      <div class="lbl">Tamaño de salida</div>
+      <div class="row">
+        <div class="fld"><label>Ancho</label><input id="outW" type="number" value="1024"></div>
+        <div class="fld"><label>Alto</label><input id="outH" type="number" value="1536"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Arte de prueba</h2>
+      <input type="file" id="artInput" accept="image/*">
+      <p class="hint">Subí tu artwork para ver el mapeo afín en vivo.</p>
+    </div>
+
+    <div class="card">
+      <button id="btnExport">Export JS</button>
+      <button class="ghost" id="btnReset">Reset</button>
+      <div class="lbl">Bloque para case-render.js</div>
+      <textarea id="out" readonly></textarea>
+      <div class="copy">Se copia automáticamente al exportar.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---- valores iniciales (esquinas reales del case, igual que case-render.js) ----
+  var q = [
+    [ 95,  172], // TL  (superior izquierda)
+    [980,  212], // TR  (superior derecha)
+    [980, 1432], // BR  (inferior derecha)
+    [ 95, 1466]  // BL  (inferior izquierda)
+  ];
+  var outW = 1024, outH = 1536;
+
+  var caseImg = new Image();
+  var artImg = null;
+  caseImg.onload = start;
+  caseImg.src = 'img/cover.png';
+
+  var stage = document.getElementById('stageCanvas');
+  var ctx = stage.getContext('2d');
+  var NAT_W, NAT_H;
+  var dragging = -1;
+
+  function start(){
+    NAT_W = caseImg.width; NAT_H = caseImg.height;
+    stage.width = NAT_W; stage.height = NAT_H;
+    stage.style.maxHeight = '88vh';
+    bindInputs();
+    draw();
+    renderOut();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,NAT_W,NAT_H);
+    ctx.drawImage(caseImg,0,0);
+
+    // arte mapeado en vivo con warp de cuadrilátero (respeta las 4 esquinas)
+    if (artImg){
+      var wArt = makeWindowArt();
+      if (wArt) drawQuadPerspective(wArt, [q[0],q[1],q[2],q[3]], 150);
+      ctx.drawImage(caseImg,0,0); // marco encima
+    }
+
+    // contorno
+    ctx.lineWidth=2; ctx.strokeStyle='rgba(255,255,255,0.7)';
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.moveTo(q[0][0],q[0][1]);
+    for (var i=1;i<4;i++) ctx.lineTo(q[i][0],q[i][1]);
+    ctx.closePath(); ctx.stroke();
+    ctx.setLineDash([]);
+
+    var names=['TL','TR','BR','BL'];
+    var cols=['#ff9d2e','#4fc3ff','#ff9d2e','#4fc3ff'];
+    for (var j=0;j<4;j++){
+      ctx.beginPath(); ctx.arc(q[j][0],q[j][1],11,0,Math.PI*2);
+      ctx.fillStyle=cols[j]; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle='#fff'; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='bold 12px monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(names[j], q[j][0], q[j][1]);
+    }
+  }
+
+  // ---- warp de cuadrilátero en perspectiva (franjas finas, sin costuras) ----
+  // Respeta las 4 esquinas EXACTAS, igual que case-render.js
+  function affineRect(img, sx, sy, sw, sh, lt, rt, lb){
+    var o=[lt[0],lt[1]];
+    var ux=(rt[0]-lt[0])/sw, uy=(rt[1]-lt[1])/sw;
+    var vx=(lb[0]-lt[0])/sh, vy=(lb[1]-lt[1])/sh;
+    var br=[rt[0]+(lb[0]-lt[0]), rt[1]+(lb[1]-lt[1])];
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(lt[0],lt[1]); ctx.lineTo(rt[0],rt[1]);
+    ctx.lineTo(br[0],br[1]); ctx.lineTo(lb[0],lb[1]);
+    ctx.closePath(); ctx.clip();
+    ctx.transform(ux,uy,vx,vy, o[0]-ux*sx-vx*sy, o[1]-uy*sx-vy*sy);
+    ctx.drawImage(img,0,0);
+    ctx.restore();
+  }
+  function drawQuadPerspective(img, q, strips){
+    var iw=img.width, ih=img.height; strips=strips||150;
+    var tl=q[0],tr=q[1],br=q[2],bl=q[3];
+    function interp(u,v){
+      var topx=tl[0]+(tr[0]-tl[0])*u, topy=tl[1]+(tr[1]-tl[1])*u;
+      var botx=bl[0]+(br[0]-bl[0])*u, boty=bl[1]+(br[1]-bl[1])*u;
+      return [topx+(botx-topx)*v, topy+(boty-topy)*v];
+    }
+    for (var s=0;s<strips;s++){
+      var v0=s/strips, v1=(s+1)/strips;
+      var lt=interp(0,v0), rt=interp(1,v0), lb=interp(0,v1);
+      affineRect(img, 0, v0*ih, iw, ih/strips, lt, rt, lb);
+    }
+  }
+  // cover-fit del arte a la proporción de la ventana, antes de deformar
+  function makeWindowArt(){
+    if (!artImg) return null;
+    var w=Math.round(q[1][0]-q[0][0]);
+    var h=Math.round((q[3][1]+q[2][1])/2 - (q[0][1]+q[1][1])/2);
+    var c=document.createElement('canvas'); c.width=Math.max(1,w); c.height=Math.max(1,h);
+    var g=c.getContext('2d');
+    var iw=artImg.width, ih=artImg.height;
+    var sc=Math.max(w/iw, h/ih);
+    var dw=iw*sc, dh=ih*sc;
+    g.drawImage(artImg,(w-dw)/2,(h-dh)/2,dw,dh);
+    return c;
+  }
+
+  // ---- arrastrar ----
+  function scaledPos(ev){
+    var r=stage.getBoundingClientRect();
+    return { x:(ev.clientX-r.left)*NAT_W/r.width, y:(ev.clientY-r.top)*NAT_H/r.height };
+  }
+  stage.addEventListener('mousedown', function(ev){
+    var p=scaledPos(ev);
+    for (var i=0;i<4;i++) if (Math.hypot(p.x-q[i][0],p.y-q[i][1])<28){ dragging=i; break; }
+  });
+  window.addEventListener('mousemove', function(ev){
+    if (dragging<0) return;
+    var p=scaledPos(ev);
+    q[dragging]=[Math.round(p.x),Math.round(p.y)];
+    syncInputs(); draw(); renderOut();
+  });
+  window.addEventListener('mouseup', function(){ dragging=-1; });
+  stage.addEventListener('touchstart', function(ev){
+    var t=ev.touches[0], p=scaledPos(t);
+    for (var i=0;i<4;i++) if (Math.hypot(p.x-q[i][0],p.y-q[i][1])<30){ dragging=i; break; }
+  },{passive:true});
+  stage.addEventListener('touchmove', function(ev){
+    ev.preventDefault(); if (dragging<0) return;
+    var p=scaledPos(ev.touches[0]);
+    q[dragging]=[Math.round(p.x),Math.round(p.y)];
+    syncInputs(); draw(); renderOut();
+  },{passive:false});
+  stage.addEventListener('touchend', function(){ dragging=-1; });
+
+  // ---- inputs ----
+  function bindInputs(){
+    ['TLx','TLy','TRx','TRy','BRx','BRy','BLx','BLy'].forEach(function(id,i){
+      document.getElementById(id).addEventListener('change', function(ev){
+        var v=parseInt(ev.target.value,10); if (isNaN(v)) return;
+        q[Math.floor(i/2)][i%2]=v; draw(); renderOut();
+      });
+    });
+    document.getElementById('outW').addEventListener('change', function(ev){
+      var v=parseInt(ev.target.value,10); if(!isNaN(v)&&v>0){outW=v;renderOut();}
+    });
+    document.getElementById('outH').addEventListener('change', function(ev){
+      var v=parseInt(ev.target.value,10); if(!isNaN(v)&&v>0){outH=v;renderOut();}
+    });
+  }
+  function syncInputs(){
+    ['TLx','TLy','TRx','TRy','BRx','BRy','BLx','BLy'].forEach(function(id,i){
+      document.getElementById(id).value=q[Math.floor(i/2)][i%2];
+    });
+    document.getElementById('outW').value=outW;
+    document.getElementById('outH').value=outH;
+  }
+
+  // ---- arte ----
+  document.getElementById('artInput').addEventListener('change', function(ev){
+    var f=ev.target.files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(e){
+      var im=new Image();
+      im.onload=function(){ artImg=im; draw(); };
+      im.src=e.target.result;
+    };
+    rd.readAsDataURL(f);
+  });
+
+  // ---- export ----
+  function renderOut(){
+    var s='// ventana (px del PNG 1024×1536)\n'
+      +'  const winTL=['+q[0][0]+', '+q[0][1]+'];\n'
+      +'  const winTR=['+q[1][0]+', '+q[1][1]+'];\n'
+      +'  const winBR=['+q[2][0]+', '+q[2][1]+'];\n'
+      +'  const winBL=['+q[3][0]+', '+q[3][1]+'];\n'
+      +'  // tamaño de canvas\n'
+      +'  // boxCanvas width='+outW+' height='+outH;
+    document.getElementById('out').value=s;
+  }
+  document.getElementById('btnExport').addEventListener('click', function(){
+    renderOut();
+    var t=document.getElementById('out');
+    t.select();
+    try{ document.execCommand('copy'); }catch(e){}
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    q=[[95,172],[980,212],[980,1432],[95,1466]];
+    outW=1024; outH=1536;
+    document.getElementById('outW').value=outW;
+    document.getElementById('outH').value=outH;
+    syncInputs(); draw(); renderOut();
+  });
+
+  syncInputs();
+})();
+</script>
+</body>
+</html>
