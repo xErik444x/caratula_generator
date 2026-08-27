@@ -23,17 +23,15 @@
     // ---- config del buscador de carátulas ----
     // workerd que hace de proxy a IGDB. Si necesitás apuntar a otro, cambiá esto.
     const SEARCH_API = 'https://covers.erikschwerdt18.workers.dev/search';
-    // proxy de imagenes del worker: reenvia la img con CORS para poder pintarla al canvas
-    // y exportarla. Si tu worker no tiene esta ruta, buscalo por el nombre que uses.
-    const IMG_PROXY = 'https://covers.erikschwerdt18.workers.dev/img?url=';
+
+    const IMG_PROXY = '';
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const searchResults = document.getElementById('searchResults');
 
   let format = 'card';
 
-  // evita recalcular algo pesado (como el recoloreo del case, ~1.5M px) en cada
-  // micro-evento 'input' que dispara el <input type=color> nativo mientras se arrastra
+
   function debounce(fn, wait){
     let t;
     return function(...args){
@@ -204,10 +202,7 @@
     casePicker.value = hex;
   }
 
-  // el <input type=color> nativo dispara 'input' en CADA micro-movimiento del mouse
-  // mientras se arrastra dentro del selector; recolorear ~1.5M px en cada uno de esos
-  // eventos congela la UI. Debounceamos el trabajo pesado y sólo lo corremos cuando
-  // el usuario hace una pausa (o suelta el picker).
+
   const applyCaseColorDebounced = debounce(applyCaseColor, 80);
 
   caseSwatchesEl.addEventListener('click', e => {
@@ -284,7 +279,7 @@
               direct.onerror = () => setSearchMsg('Could not load that cover.');
               direct.src = url;
             };
-            img.src = IMG_PROXY + encodeURIComponent(url);
+            img.src = url;
           }
 
           async function runSearch(q){
