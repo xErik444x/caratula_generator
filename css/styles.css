@@ -117,6 +117,19 @@ body{
   margin-top:6px;
   line-height:1.4;
 }
+.field .hint.hint-warn{
+  color:#ffb454;
+  background:rgba(255,180,84,0.08);
+  border:1px solid rgba(255,180,84,0.3);
+  border-radius:8px;
+  padding:8px 10px;
+}
+.field .hint.hint-warn code{
+  background:rgba(0,0,0,0.35);
+  padding:1px 5px;
+  border-radius:4px;
+  font-size:10.5px;
+}
 
 input[type=text]{
   width:100%;
@@ -269,6 +282,71 @@ input[type=text]::placeholder{color:#5c5280;}
 .swatch:hover{transform:scale(1.1);}
 .swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--bg-panel), 0 0 0 4px currentColor;}
 
+/* swatch "custom": circulo arcoiris con un input[type=color] nativo invisible encima */
+.swatch-custom{
+  position:relative;
+  background:conic-gradient(from 200deg,#ff5252,#ffca28,#66bb6a,#29b6f6,#7c4dff,#ff5252);
+  display:flex;align-items:center;justify-content:center;
+}
+.swatch-custom-inner{
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  background:#100c1c;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+  line-height:1;
+  pointer-events:none;
+  transition:background .15s;
+}
+.swatch-custom input[type=color]{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  opacity:0;
+  cursor:pointer;
+  border:none;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* campo de hex debajo de los swatches, para tipear un color exacto */
+.hex-row{
+  display:flex;
+  align-items:stretch;
+  max-width:150px;
+  margin-top:10px;
+}
+.hex-hash{
+  display:flex;align-items:center;
+  padding:0 0 0 12px;
+  background:#0d0a18;
+  border:1px solid var(--line);
+  border-right:none;
+  border-radius:9px 0 0 9px;
+  color:var(--ink-dim);
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:15px;
+}
+.hex-input{
+  flex:1;
+  min-width:0;
+  background:#0d0a18;
+  border:1px solid var(--line);
+  border-left:none;
+  border-radius:0 9px 9px 0;
+  color:var(--ink);
+  padding:9px 10px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  outline:none;
+  transition:border-color .15s;
+}
+.hex-input:focus{border-color:var(--violet-light);}
+.hex-input.invalid{border-color:#e0364f;}
+
 .range-field input[type=range]{
   width:100%;accent-color:var(--violet-light);
 }
@@ -316,6 +394,10 @@ input[type=text]::placeholder{color:#5c5280;}
 /* controles solo del formato custom: se ocultan salvo en custom */
 .custom-only{display:none;}
 .panel.format-custom .custom-only{display:block;}
+
+/* controles solo del formato Game Case (filtro de color del template): se ocultan salvo en box */
+.box-only{display:none;}
+.panel.format-box .box-only{display:block;}
 
 /* ---- controles del formato custom (sliders + overlay) ---- */
 .range-row{

@@ -7,6 +7,7 @@
   const { draw, state } = window.CardRender;
   const CaseRender = window.CaseRender;
   const CustomRender = window.CustomRender;
+  const CU = window.ColorUtils;
 
   const panel = document.querySelector('.panel');
     const canvasShell = document.querySelector('.canvas-shell');
@@ -30,6 +31,16 @@
     const searchResults = document.getElementById('searchResults');
 
   let format = 'card';
+
+  // evita recalcular algo pesado (como el recoloreo del case, ~1.5M px) en cada
+  // micro-evento 'input' que dispara el <input type=color> nativo mientras se arrastra
+  function debounce(fn, wait){
+    let t;
+    return function(...args){
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
 
   function syncFromInputs(){
     state.title = titleInput.value;
@@ -91,14 +102,140 @@
     setFormat(btn.dataset.fmt);
   });
 
-  document.getElementById('swatches').addEventListener('click', e => {
+  // ---- Accent color: swatches fijos + picker libre + hex ----
+  const swatchesEl = document.getElementById('swatches');
+  const accentPicker = document.getElementById('accentPicker');
+  const accentCustomBtn = document.getElementById('accentCustomBtn');
+  const accentCustomInner = accentCustomBtn.querySelector('.swatch-custom-inner');
+  const accentHex = document.getElementById('accentHex');
+
+  function clearAccentSwatches(){
+    swatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  }
+
+  function applyAccent(mainHex, lightHex){
+    const main = CU.normalizeHex(mainHex) || mainHex;
+    const light = lightHex || CU.deriveLight(main);
+    state.accent = { main, light };
+    // no reescribir el campo mientras el usuario está tipeando en él (rompería el cursor
+    // y, con un shorthand de 3 dígitos válido a mitad de tipeo, el texto que sigue escribiendo)
+    if (document.activeElement !== accentHex){
+      accentHex.value = main.replace('#','').toUpperCase();
+    }
+    accentHex.classList.remove('invalid');
+    redraw();
+  }
+
+  function activateAccentCustom(hex){
+    clearAccentSwatches();
+    accentCustomBtn.classList.add('active');
+    accentCustomBtn.style.color = hex;
+    accentCustomInner.style.background = hex;
+    accentCustomInner.textContent = '';
+    accentPicker.value = hex;
+  }
+
+  swatchesEl.addEventListener('click', e => {
     const sw = e.target.closest('.swatch');
-    if (!sw) return;
-    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    if (!sw || sw === accentCustomBtn) return;
+    clearAccentSwatches();
     sw.classList.add('active');
     const parts = sw.dataset.color.split(',');
-    state.accent = { main: parts[0], light: parts[1] };
+    applyAccent(parts[0], parts[1]);
+  });
+
+  accentPicker.addEventListener('input', () => {
+    activateAccentCustom(accentPicker.value);
+    applyAccent(accentPicker.value);
+  });
+
+  accentHex.addEventListener('input', () => {
+    const norm = CU.normalizeHex(accentHex.value);
+    if (norm){
+      activateAccentCustom(norm); // solo toca los swatches/picker, no este mismo input
+      applyAccent(norm);
+    } else if (accentHex.value.trim().length >= 3){
+      accentHex.classList.add('invalid');
+    }
+  });
+  // al salir del campo, prolijamos lo que quedó tipeado (mayúsculas, 3→6 dígitos)
+  accentHex.addEventListener('change', () => {
+    const norm = CU.normalizeHex(accentHex.value);
+    if (norm) accentHex.value = norm.replace('#','').toUpperCase();
+  });
+
+  // ---- Case color: filtro de recoloreo del template del Game Case ----
+  const caseSwatchesEl = document.getElementById('caseSwatches');
+  const casePicker = document.getElementById('casePicker');
+  const caseCustomBtn = document.getElementById('caseCustomBtn');
+  const caseCustomInner = caseCustomBtn.querySelector('.swatch-custom-inner');
+  const caseHex = document.getElementById('caseHex');
+  const caseHint = document.getElementById('caseColorHint');
+
+  function clearCaseSwatches(){
+    caseSwatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  }
+
+  function applyCaseColor(value){
+    CaseRender.setColor(value);
+    if (value !== 'mono'){
+      const norm = CU.normalizeHex(value) || value;
+      if (document.activeElement !== caseHex){
+        caseHex.value = norm.replace('#','').toUpperCase();
+      }
+      caseHex.classList.remove('invalid');
+    }
     redraw();
+    // si el filtro no pudo aplicarse (canvas "tainted" por abrir el HTML con file://
+    // en vez de servirlo por http), avisamos una sola vez con instrucciones concretas
+    if (CaseRender._tainted && !caseHint.dataset.taintedShown){
+      caseHint.dataset.taintedShown = '1';
+      caseHint.innerHTML = '⚠ The color filter needs this page served over http (it can\'t read the image pixels from a double-clicked file). Run <code>python3 -m http.server</code> in this folder and open it via <code>http://localhost:8000</code>, or use VSCode\'s "Live Server". The case will stay in its original color until then.';
+      caseHint.classList.add('hint-warn');
+    }
+  }
+
+  function activateCaseCustom(hex){
+    clearCaseSwatches();
+    caseCustomBtn.classList.add('active');
+    caseCustomBtn.style.color = hex;
+    caseCustomInner.style.background = hex;
+    caseCustomInner.textContent = '';
+    casePicker.value = hex;
+  }
+
+  // el <input type=color> nativo dispara 'input' en CADA micro-movimiento del mouse
+  // mientras se arrastra dentro del selector; recolorear ~1.5M px en cada uno de esos
+  // eventos congela la UI. Debounceamos el trabajo pesado y sólo lo corremos cuando
+  // el usuario hace una pausa (o suelta el picker).
+  const applyCaseColorDebounced = debounce(applyCaseColor, 80);
+
+  caseSwatchesEl.addEventListener('click', e => {
+    const sw = e.target.closest('.swatch');
+    if (!sw || sw === caseCustomBtn) return;
+    clearCaseSwatches();
+    sw.classList.add('active');
+    applyCaseColor(sw.dataset.color);
+  });
+
+  casePicker.addEventListener('input', () => {
+    activateCaseCustom(casePicker.value); // feedback visual inmediato (barato)
+    applyCaseColorDebounced(casePicker.value); // recoloreo real: pesado, se debounce
+  });
+
+  caseHex.addEventListener('input', () => {
+    const norm = CU.normalizeHex(caseHex.value);
+    if (norm){
+      activateCaseCustom(norm); // solo toca los swatches/picker, no este mismo input
+      applyCaseColor(norm);
+    } else if (caseHex.value.trim().length >= 3){
+      caseHex.classList.add('invalid');
+    }
+  });
+  // al salir del campo, prolijamos lo que quedó tipeado (mayúsculas, 3→6 dígitos)
+  caseHex.addEventListener('change', () => {
+    const norm = CU.normalizeHex(caseHex.value);
+    if (norm) caseHex.value = norm.replace('#','').toUpperCase();
   });
 
   [titleInput, subInput, showTitle, showSubtitle].forEach(inp => {

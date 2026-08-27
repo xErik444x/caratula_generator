@@ -96,7 +96,37 @@
                 <div class="swatch" style="background:#2fae6a;color:#2fae6a" data-color="#0f7a41,#7fe6ab"></div>
                 <div class="swatch" style="background:#e08a1f;color:#e08a1f" data-color="#b5610a,#ffc266"></div>
                 <div class="swatch" style="background:#3a3f4a;color:#3a3f4a" data-color="#1c1f26,#7d8697"></div>
+                <label class="swatch swatch-custom" id="accentCustomBtn" title="Custom color">
+                  <span class="swatch-custom-inner">🎨</span>
+                  <input type="color" id="accentPicker" value="#8b2fd6">
+                </label>
               </div>
+              <div class="hex-row">
+                <span class="hex-hash">#</span>
+                <input type="text" id="accentHex" class="hex-input" value="8B2FD6" maxlength="6" spellcheck="false" autocomplete="off" inputmode="text">
+              </div>
+            </div>
+
+            <div class="field box-only">
+              <label>Case color</label>
+              <div class="swatches" id="caseSwatches">
+                <div class="swatch active" style="background:#8b2fd6;color:#8b2fd6" data-color="#8b2fd6" title="Original"></div>
+                <div class="swatch" style="background:#1e88e5;color:#1e88e5" data-color="#1e88e5" title="Blue"></div>
+                <div class="swatch" style="background:#e0364f;color:#e0364f" data-color="#e0364f" title="Red"></div>
+                <div class="swatch" style="background:#2fae6a;color:#2fae6a" data-color="#2fae6a" title="Green"></div>
+                <div class="swatch" style="background:#e08a1f;color:#e08a1f" data-color="#e08a1f" title="Orange"></div>
+                <div class="swatch" style="background:#e91e8c;color:#e91e8c" data-color="#e91e8c" title="Pink"></div>
+                <div class="swatch" style="background:linear-gradient(135deg,#fff,#2a2a2a);color:#9aa0ab" data-color="mono" title="Stealth (grayscale)"></div>
+                <label class="swatch swatch-custom" id="caseCustomBtn" title="Custom color">
+                  <span class="swatch-custom-inner">🎨</span>
+                  <input type="color" id="casePicker" value="#8b2fd6">
+                </label>
+              </div>
+              <div class="hex-row">
+                <span class="hex-hash">#</span>
+                <input type="text" id="caseHex" class="hex-input" value="8B2FD6" maxlength="6" spellcheck="false" autocomplete="off" inputmode="text">
+              </div>
+              <div class="hint" id="caseColorHint">Recolors the fbsgames case template (spine + badges). White, black and the plastic edge stay neutral.</div>
             </div>
 
             <div class="field custom-only">
@@ -147,6 +177,7 @@
   </div>
 </div>
 
+<script src="js/color-utils.js"></script>
 <script src="js/card-render.js"></script>
 <script src="js/case-render.js"></script>
 <script src="js/custom-render.js"></script>

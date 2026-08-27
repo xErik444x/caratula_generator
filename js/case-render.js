@@ -7,6 +7,7 @@
   const ctx = box.getContext('2d');
   const BW = box.width, BH = box.height;
   const Card = window.CardRender;
+  const CU = window.ColorUtils;
 
   const caseImg = new Image();
   caseImg.src = 'img/cover.png';
@@ -18,6 +19,100 @@
       window.CaseRender._pending = false;
     }
   };
+
+  // ---- filtro de color del case ----
+  // El template (img/cover.png) viene en violeta. Para "pintarlo" de otro color rotamos
+  // el tono (hue) SOLO de los píxeles saturados (el violeta de lomo/badges), y dejamos
+  // intacto todo lo casi-gris: blanco, negro y el plateado del borde plástico.
+  // '#8b2fd6' (default) es un no-op: se devuelve la imagen original, sin recalcular nada.
+  const DEFAULT_CASE_COLOR = '#8b2fd6';
+  const SOURCE_HUE = 265; // tono medido del violeta real del PNG (no es exactamente el de #8b2fd6)
+  const GRAY_THRESHOLD = 18; // max-min de canal por debajo de esto = "gris", se deja igual
+  const SAT_THRESHOLD = 0.12;
+
+  let currentCaseColor = DEFAULT_CASE_COLOR;
+  const recolorCache = new Map(); // hex|'mono' -> canvas recoloreado
+  let taintedWarned = false; // evita loguear/advertir mas de una vez
+
+  function recolorCaseUnsafe(key){
+    const c = document.createElement('canvas');
+    c.width = caseImg.width;
+    c.height = caseImg.height;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(caseImg, 0, 0);
+
+    const isMono = key === 'mono'; // opción "Stealth": desatura a blanco/negro/gris
+    let shift = 0;
+    if (!isMono){
+      const hsl = CU.hexToHsl(key);
+      const targetHue = hsl ? hsl.h : SOURCE_HUE;
+      shift = targetHue - SOURCE_HUE;
+    }
+
+    // getImageData puede tirar SecurityError si la página se abrió como file:// en vez
+    // de servirse por http (canvas "contaminado"): dejamos que se propague y lo maneja
+    // getRecoloredCase con un fallback, en vez de romper el draw() entero.
+    const imgData = g.getImageData(0, 0, c.width, c.height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4){
+      const r = d[i], gg = d[i + 1], b = d[i + 2], a = d[i + 3];
+      if (a === 0) continue;
+      const max = Math.max(r, gg, b), min = Math.min(r, gg, b);
+      if (max - min < GRAY_THRESHOLD) continue; // ya es gris/blanco/negro: no tocar
+      const hsl = CU.rgbToHsl(r, gg, b);
+      if (hsl.s < SAT_THRESHOLD) continue;
+      if (isMono){
+        const v = Math.round(hsl.l * 255);
+        d[i] = v; d[i + 1] = v; d[i + 2] = v;
+      } else {
+        let nh = (hsl.h + shift) % 360;
+        if (nh < 0) nh += 360;
+        const rgb = CU.hslToRgb(nh, hsl.s, hsl.l);
+        d[i] = rgb.r; d[i + 1] = rgb.g; d[i + 2] = rgb.b;
+      }
+    }
+    g.putImageData(imgData, 0, 0);
+    return c;
+  }
+
+  function getRecoloredCase(key){
+    key = key || DEFAULT_CASE_COLOR;
+    if (recolorCache.has(key)) return recolorCache.get(key);
+
+    if (key.toLowerCase() === DEFAULT_CASE_COLOR){
+      recolorCache.set(key, caseImg); // sin cambios: usamos la imagen original tal cual
+      return caseImg;
+    }
+
+    try {
+      const result = recolorCaseUnsafe(key);
+      recolorCache.set(key, result);
+      return result;
+    } catch (err) {
+      // Canvas contaminado (típicamente al abrir el HTML con doble-click, file://,
+      // en vez de servirlo por http). No podemos leer los píxeles para recolorear,
+      // así que devolvemos el case original en vez de dejar el draw() a mitad de camino.
+      recolorCache.set(key, caseImg);
+      if (!taintedWarned){
+        taintedWarned = true;
+        console.warn('[CaseRender] No se pudo aplicar el filtro de color (canvas "tainted"). ' +
+          'Esto pasa cuando la página se abre con doble-click (file://) en vez de servirse ' +
+          'desde un servidor local. Probá: "python3 -m http.server" en esta carpeta, o abrila ' +
+          'con la extensión "Live Server" de VSCode.', err);
+        if (window.CaseRender) window.CaseRender._tainted = true;
+      }
+      return caseImg;
+    }
+  }
+
+  function setColor(hex){
+    currentCaseColor = hex || DEFAULT_CASE_COLOR;
+    render();
+  }
+
+  function getColor(){
+    return currentCaseColor;
+  }
 
   // ---- ventana del case: 4 esquinas (px del PNG 1024×1536) ----
   // Valores que calibraste en el editor.
@@ -156,7 +251,7 @@
     const win = [winTL, winTR, winBR, winBL];
     drawQuadPerspective(art, win, 150);
 
-    ctx.drawImage(caseImg, 0, 0);
+    ctx.drawImage(getRecoloredCase(currentCaseColor), 0, 0);
   }
 
   function makePlaceholderArt(){
@@ -197,5 +292,5 @@
     document.fonts.ready.then(render);
   }
 
-  window.CaseRender = { init, render, _pending: false, _debug: { getWindowSize } };
+  window.CaseRender = { init, render, setColor, getColor, _pending: false, _tainted: false, _debug: { getWindowSize } };
 })();
