@@ -26,7 +26,15 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/styles.css">
+<!-- Cache busting en runtime: cada recurso se importa con ?v=<fecha/aleatorio>.
+     Github Pages cachea js/css con TTL; al cambiar el ?v el navegador descarga
+     la version nueva. document.write corre ANTES de que el recurso se descargue. -->
+<script>
+  var __v = '?v=' + new Date().getTime();
+</script>
+<script>
+  document.write('<link rel="stylesheet" href="css/styles.css' + __v + '">');
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -177,10 +185,13 @@
   </div>
 </div>
 
-<script src="js/color-utils.js"></script>
-<script src="js/card-render.js"></script>
-<script src="js/case-render.js"></script>
-<script src="js/custom-render.js"></script>
-<script src="js/app.js"></script>
+<!-- scripts importados con ?v=<fecha> para saltar la cache de Github Pages -->
+<script>
+  document.write('<script src="js/color-utils.js' + __v + '"><\/script>');
+  document.write('<script src="js/card-render.js' + __v + '"><\/script>');
+  document.write('<script src="js/case-render.js' + __v + '"><\/script>');
+  document.write('<script src="js/custom-render.js' + __v + '"><\/script>');
+  document.write('<script src="js/app.js' + __v + '"><\/script>');
+</script>
 </body>
 </html>
