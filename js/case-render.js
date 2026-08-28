@@ -117,7 +117,7 @@
   // ---- ventana del case: 4 esquinas (px del PNG 1024×1536) ----
   // Valores que calibraste en el editor.
   const winTL = [94, 108];   // superior izquierda
-  const winTR = [1014, 164]; // superior derecha
+  const winTR = [985, 158];  // superior derecha
   const winBR = [989, 1433]; // inferior derecha
   const winBL = [92, 1492];  // inferior izquierda
 

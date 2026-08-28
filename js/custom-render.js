@@ -19,7 +19,7 @@
     offX: 0, offY: 0,        // desplazamiento del arte (px de la ventana)
     // ventana editable del overlay: 4 esquinas (px del canvas 1024×1536)
     winTL: [94, 108],
-    winTR: [1014, 164],
+    winTR: [985, 158],
     winBR: [989, 1433],
     winBL: [92, 1492],
   };
@@ -180,7 +180,7 @@
   }
   function reset(){
     state.scale=1; state.offX=0; state.offY=0;
-    state.winTL=[94,108]; state.winTR=[1014,164];
+    state.winTL=[94,108]; state.winTR=[985,158];
     state.winBR=[989,1433]; state.winBL=[92,1492];
     redraw();
   }
