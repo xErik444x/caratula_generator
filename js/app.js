@@ -22,7 +22,7 @@
 
     // ---- config del buscador de carátulas ----
     // workerd que hace de proxy a IGDB. Si necesitás apuntar a otro, cambiá esto.
-    const SEARCH_API = 'https://covers.erikschwerdt18.workers.dev/search';
+    const SEARCH_API = 'https://covers.erik444.workers.dev/search';
 
     const IMG_PROXY = '';
     const searchInput = document.getElementById('searchInput');
