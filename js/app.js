@@ -233,6 +233,16 @@
     if (norm) caseHex.value = norm.replace('#','').toUpperCase();
   });
 
+  // ---- zoom del arte dentro del Game Case ----
+  const boxZoom = document.getElementById('boxZoom');
+  const boxZoomVal = document.getElementById('boxZoomVal');
+  function applyBoxZoom(){
+    const v = parseInt(boxZoom.value, 10) / 100;      // 100..300 -> 1..3
+    CaseRender.setZoom(v);
+    boxZoomVal.textContent = boxZoom.value + '%';
+  }
+  boxZoom.addEventListener('input', applyBoxZoom);
+
   [titleInput, subInput, showTitle, showSubtitle].forEach(inp => {
     inp.addEventListener('input', redraw);
     inp.addEventListener('change', redraw);

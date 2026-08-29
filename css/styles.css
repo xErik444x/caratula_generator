@@ -395,7 +395,7 @@ input[type=text]::placeholder{color:#5c5280;}
 .custom-only{display:none;}
 .panel.format-custom .custom-only{display:block;}
 
-/* controles solo del formato Game Case (filtro de color del template): se ocultan salvo en box */
+/* controles solo del formato Game Case: se ocultan salvo en box */
 .box-only{display:none;}
 .panel.format-box .box-only{display:block;}
 

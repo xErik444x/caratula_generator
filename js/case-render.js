@@ -12,6 +12,7 @@
   const caseImg = new Image();
   caseImg.src = 'img/cover.png';
   let caseReady = false;
+  let artZoom = 1; // 1 = entra entera; >1 = acerca y recorta bordes
   caseImg.onload = () => {
     caseReady = true;
     if (window.CaseRender){
@@ -233,9 +234,30 @@
     c.width = w; c.height = h;
     const g = c.getContext('2d');
     const iw = src.width, ih = src.height;
-    const sc = Math.max(w/iw, h/ih);
-    const dw = iw*sc, dh = ih*sc;
+
+    // 1) FONDO: el arte a sangre completa, desenfocado (blur por upscale a
+    //    baja resolución — compatible con Safari iOS que no soporta ctx.filter).
+    //    Asi no quedan barras vacías en los costados.
+    const small = document.createElement('canvas');
+    const sw = Math.max(2, Math.round(w / 8));
+    const sh = Math.max(2, Math.round(h / 8));
+    small.width = sw; small.height = sh;
+    const sg = small.getContext('2d');
+    const fill = Math.max(sw/iw, sh/ih);
+    sg.drawImage(src, (sw-iw*fill)/2, (sh-ih*fill)/2, iw*fill, ih*fill);
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(small, 0, 0, w, h);
+    // oscurece el fondo para que resalte el arte nítido del centro
+    g.fillStyle = 'rgba(0,0,0,0.45)';
+    g.fillRect(0, 0, w, h);
+
+    // 2) ARTE NÍTIDO: la imagen COMPLETA (contain, sin recortar) centrada.
+    //    El zoom (100% = entra entera; >100% = se acerca y recorta los bordes).
+    const fit = Math.min(w/iw, h/ih) * artZoom;
+    const dw = iw*fit, dh = ih*fit;
     g.drawImage(src, (w-dw)/2, (h-dh)/2, dw, dh);
+
     return c;
   }
 
@@ -292,5 +314,11 @@
     document.fonts.ready.then(render);
   }
 
-  window.CaseRender = { init, render, setColor, getColor, _pending: false, _tainted: false, _debug: { getWindowSize } };
+  function setZoom(v){
+    artZoom = Math.max(0.25, Math.min(4, v));
+    if (caseReady) draw();
+  }
+  function getZoom(){ return artZoom; }
+
+  window.CaseRender = { init, render, setColor, getColor, setZoom, getZoom, _pending: false, _tainted: false, _debug: { getWindowSize } };
 })();
