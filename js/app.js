@@ -238,10 +238,10 @@
     inp.addEventListener('change', redraw);
   });
 
-  // ---- descarga de imagen multiplataforma ----
-  // iOS Safari NO descarga a[download] con data:URL gigantes (canvas 1024×1536).
-  // La via confiable en iPhone es toBlob + Web Share ("Guardar imagen").
-  // En desktop/Android se usa una descarga normal con objectURL.
+  // ---- guardado de imagen multiplataforma ----
+  // iOS Safari no descarga a[download] con data:URL gigantes (canvas 1024×1536),
+  // asi que en iOS usamos el share sheet de Apple ("Guardar imagen").
+  // En Windows / Android / desktop se hace la descarga directa como siempre.
   function dataURLtoBlob(dataurl){
     const [head, data] = dataurl.split(',');
     const mime = (head.match(/:(.*?);/) || [])[1] || 'image/png';
@@ -251,30 +251,34 @@
     return new Blob([u8], { type: mime });
   }
 
+  function isIOS(){
+    // cubre iPhone/iPad/iPod y iPadOS (que se reporta como Macintosh)
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints > 2 && /Macintosh/i.test(navigator.userAgent));
+  }
+
   async function saveCanvasAsPng(blob, filename){
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                  (navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
     const file = new File([blob], filename, { type: blob.type });
 
-    // iOS: usa el share sheet (permite "Guardar imagen"/"Guardar en Archivos")
-    if (navigator.canShare && navigator.canShare({ files: [file] })){
+    // SOLO iOS usa el share sheet de Apple
+    if (isIOS() && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
       try{
         await navigator.share({ files: [file], title: filename });
         return;
       }catch(err){
         if (err.name === 'AbortError') return; // usuario cancelo
-        // si falla por otra razon, cae al download normal
+        // si falla por otra razon, cae al download directo abajo
       }
     }
-    if (isIOS && navigator.share && !navigator.canShare){
-      // Safari iOS viejo sin canShare: intenta share directo
+    // fallback para iOS viejo sin canShare: intenta share igual
+    if (isIOS() && navigator.share && !navigator.canShare){
       try{
         await navigator.share({ files: [file], title: filename });
         return;
-      }catch(err){ /* fallback abajo */ }
+      }catch(err){ /* cae al download directo */ }
     }
 
-    // Desktop / Android (y fallback): descarga clasica con objectURL
+    // Windows / Android / desktop (y fallback iOS): descarga directa con objectURL
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
