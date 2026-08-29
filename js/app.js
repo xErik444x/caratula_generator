@@ -238,20 +238,71 @@
     inp.addEventListener('change', redraw);
   });
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
+  // ---- descarga de imagen multiplataforma ----
+  // iOS Safari NO descarga a[download] con data:URL gigantes (canvas 1024×1536).
+  // La via confiable en iPhone es toBlob + Web Share ("Guardar imagen").
+  // En desktop/Android se usa una descarga normal con objectURL.
+  function dataURLtoBlob(dataurl){
+    const [head, data] = dataurl.split(',');
+    const mime = (head.match(/:(.*?);/) || [])[1] || 'image/png';
+    const bin = atob(data);
+    const u8 = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+    return new Blob([u8], { type: mime });
+  }
+
+  async function saveCanvasAsPng(blob, filename){
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
+    const file = new File([blob], filename, { type: blob.type });
+
+    // iOS: usa el share sheet (permite "Guardar imagen"/"Guardar en Archivos")
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try{
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }catch(err){
+        if (err.name === 'AbortError') return; // usuario cancelo
+        // si falla por otra razon, cae al download normal
+      }
+    }
+    if (isIOS && navigator.share && !navigator.canShare){
+      // Safari iOS viejo sin canShare: intenta share directo
+      try{
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }catch(err){ /* fallback abajo */ }
+    }
+
+    // Desktop / Android (y fallback): descarga clasica con objectURL
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+
+  function canvasToBlob(canvas, filename){
+    return new Promise(resolve => {
+      canvas.toBlob(blob => resolve(blob), 'image/png');
+    });
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
           const name = (titleInput.value || 'cover').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'_') || 'cover';
-          let url;
+          const filename = name + '.png';
+          let blob;
           if (format === 'custom'){
-            // exporta sin las guías de las esquinas
-            url = CustomRender.cleanDataURL();
+            // exporta sin las guías de las esquinas (devuelve dataURL) -> a blob
+            blob = dataURLtoBlob(CustomRender.cleanDataURL());
           } else {
             const canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
-            url = document.getElementById(canvasId).toDataURL('image/png');
+            blob = await canvasToBlob(document.getElementById(canvasId), filename);
           }
-          const link = document.createElement('a');
-          link.download = name + '.png';
-          link.href = url;
-          link.click();
+          if (blob) await saveCanvasAsPng(blob, filename);
         });
 
     // ---- buscador de carátulas ----
