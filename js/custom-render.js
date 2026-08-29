@@ -18,10 +18,10 @@
     scale: 1,                // escala del arte (1 = cover-fit a la ventana)
     offX: 0, offY: 0,        // desplazamiento del arte (px de la ventana)
     // ventana editable del overlay: 4 esquinas (px del canvas 1024×1536)
-    winTL: [94, 108],
-    winTR: [985, 158],
-    winBR: [989, 1433],
-    winBL: [92, 1492],
+    winTL: [104, 63],
+    winTR: [983, 116],
+    winBR: [985, 1429],
+    winBL: [102, 1483],
   };
 
   // ---- carga del overlay por defecto ----
@@ -180,8 +180,8 @@
   }
   function reset(){
     state.scale=1; state.offX=0; state.offY=0;
-    state.winTL=[94,108]; state.winTR=[985,158];
-    state.winBR=[989,1433]; state.winBL=[92,1492];
+    state.winTL=[104,63]; state.winTR=[983,116];
+    state.winBR=[985,1429]; state.winBL=[102,1483];
     redraw();
   }
   function redraw(){ draw(); }

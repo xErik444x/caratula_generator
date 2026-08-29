@@ -116,10 +116,10 @@
 
   // ---- ventana del case: 4 esquinas (px del PNG 1024×1536) ----
   // Valores que calibraste en el editor.
-  const winTL = [94, 112];   // superior izquierda
-  const winTR = [985, 160]; // superior derecha
-  const winBR = [989, 1433]; // inferior derecha
-  const winBL = [92, 1492];  // inferior izquierda
+  const winTL = [104, 63];   // superior izquierda
+  const winTR = [983, 116];  // superior derecha
+  const winBR = [985, 1429]; // inferior derecha
+  const winBL = [102, 1483]; // inferior izquierda
 
   // ---- warp de cuadrilátero en perspectiva (franjas finas, sin costuras) ----
   // Respeta las 4 esquinas EXACTAS. Un afín no sirve porque ignora BR y desborda.
