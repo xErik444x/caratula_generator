@@ -42,21 +42,21 @@
     const h = Math.max(1, Math.round((q[3][1]+q[2][1])/2 - (q[0][1]+q[1][1])/2));
     return { w, h };
   }
-  function affineRect(img, sx, sy, sw, sh, lt, rt, lb){
+  function affineRect(g, img, sx, sy, sw, sh, lt, rt, lb){
     const o=[lt[0],lt[1]];
     const ux=(rt[0]-lt[0])/sw, uy=(rt[1]-lt[1])/sw;
     const vx=(lb[0]-lt[0])/sh, vy=(lb[1]-lt[1])/sh;
     const br=[rt[0]+(lb[0]-lt[0]), rt[1]+(lb[1]-lt[1])];
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(lt[0],lt[1]); ctx.lineTo(rt[0],rt[1]);
-    ctx.lineTo(br[0],br[1]); ctx.lineTo(lb[0],lb[1]);
-    ctx.closePath(); ctx.clip();
-    ctx.transform(ux,uy,vx,vy, o[0]-ux*sx-vx*sy, o[1]-uy*sx-vy*sy);
-    ctx.drawImage(img,0,0);
-    ctx.restore();
+    g.save();
+    g.beginPath();
+    g.moveTo(lt[0],lt[1]); g.lineTo(rt[0],rt[1]);
+    g.lineTo(br[0],br[1]); g.lineTo(lb[0],lb[1]);
+    g.closePath(); g.clip();
+    g.transform(ux,uy,vx,vy, o[0]-ux*sx-vx*sy, o[1]-uy*sx-vy*sy);
+    g.drawImage(img,0,0);
+    g.restore();
   }
-  function drawQuadPerspective(img, q, strips){
+  function drawQuadPerspective(g, img, q, strips){
     const iw=img.width, ih=img.height; strips=strips||150;
     const tl=q[0],tr=q[1],br=q[2],bl=q[3];
     const interp=(u,v)=>{
@@ -67,7 +67,7 @@
     for(let s=0;s<strips;s++){
       const v0=s/strips, v1=(s+1)/strips;
       const lt=interp(0,v0), rt=interp(1,v0), lb=interp(0,v1);
-      affineRect(img, 0, v0*ih, iw, ih/strips, lt, rt, lb);
+      affineRect(g, img, 0, v0*ih, iw, ih/strips, lt, rt, lb);
     }
   }
 
@@ -92,24 +92,36 @@
   }
 
   // ---- dibujo principal sobre el canvas custom ----
-  function draw(){
-    ctx.clearRect(0, 0, BW, BH);
-
-    // 1) arte bajo el overlay (el overlay es el frame, con su ventana transparente)
+  // dibuja arte + overlay SIN las guías, sobre un contexto arbitrario
+  function renderContent(g){
     const art = makeArt();
     if (art && overlayReady){
-      drawQuadPerspective(art, quad(), 150);
+      drawQuadPerspective(g, art, quad(), 150);
     }
-
-    // 2) overlay (frame) encima
     if (overlayReady && state.overlayImage){
-      ctx.drawImage(state.overlayImage, 0, 0);
+      g.drawImage(state.overlayImage, 0, 0);
     }
+  }
 
-    // 3) guía de las 4 esquinas (solo editables, siempre visibles en custom)
+  function draw(){
+    ctx.clearRect(0, 0, BW, BH);
+    renderContent(ctx);
+    // guías de las 4 esquinas (solo en el editor, no en el preview/export)
+    const art = makeArt();
     if (art && overlayReady){
       drawHandles();
     }
+  }
+
+  // miniatura sin guías para el sticky preview (a la proporción del case)
+  function renderThumb(target){
+    const tw = target.width, th = target.height;
+    const g = target.getContext('2d');
+    g.clearRect(0, 0, tw, th);
+    g.save();
+    g.scale(tw / BW, th / BH);
+    renderContent(g);
+    g.restore();
   }
 
   function drawHandles(){
@@ -213,5 +225,5 @@
     return canvas.toDataURL('image/png');
   }
 
-  window.CustomRender = { init, render, draw, state, setOverlay, reset, cleanDataURL };
+  window.CustomRender = { init, render, draw, state, setOverlay, reset, cleanDataURL, renderThumb };
 })();

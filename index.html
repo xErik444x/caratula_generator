@@ -82,7 +82,7 @@
                         <div class="field box-only">
                           <label>Artwork zoom</label>
                           <div class="range-field">
-                            <input type="range" id="boxZoom" min="100" max="300" value="100">
+                            <input type="range" id="boxZoom" min="100" max="200" value="100">
                             <span class="range-val" id="boxZoomVal">100%</span>
                           </div>
                           <div class="hint">Zoom the cover inside the case window (over the blurred edges).</div>
@@ -192,6 +192,12 @@
         </div>
 
   </div>
+</div>
+
+<!-- Mini-preview sticky: se muestra en móvil cuando el preview grande sale de vista -->
+<div class="mini-preview" id="miniPreview" hidden>
+  <canvas id="miniCanvas" width="200" height="300"></canvas>
+  <span class="mini-tag">Live preview</span>
 </div>
 
 <!-- scripts importados con ?v=<fecha> para saltar la cache de Github Pages -->

@@ -65,12 +65,14 @@ body{
   grid-template-columns:380px 1fr;
   gap:26px;
   align-items:start;
+  min-width:0;
 }
 
 .panel{
   background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel2));
   border:1px solid var(--line);
   border-radius:16px;
+  min-width:0;
   padding:22px;
   box-shadow:0 20px 50px rgba(0,0,0,0.45);
 }
@@ -195,11 +197,15 @@ input[type=text]::placeholder{color:#5c5280;}
 .search-results{
   margin-top:10px;
   max-height:300px;
+  max-width:100%;
+  width:100%;
   overflow-y:auto;
+  overflow-x:hidden;
   display:flex;
   flex-direction:column;
   gap:8px;
   scrollbar-width:thin;
+  min-width:0;
 }
 .search-results[hidden]{display:none;}
 .sr-item{
@@ -212,6 +218,7 @@ input[type=text]::placeholder{color:#5c5280;}
   background:#0d0a18;
   cursor:pointer;
   transition:border-color .15s, background .15s;
+  min-width:0;
 }
 .sr-item:hover{border-color:var(--violet-light);background:#150f28;}
 .sr-item img{
@@ -228,7 +235,7 @@ input[type=text]::placeholder{color:#5c5280;}
   background:#1a1530;border-radius:6px;color:var(--ink-dim);font-size:18px;
   flex-shrink:0;
 }
-.sr-meta{min-width:0;}
+.sr-meta{min-width:0;flex:1;}
 .sr-name{
   font-family:'Rajdhani',sans-serif;
   font-weight:700;
@@ -243,6 +250,9 @@ input[type=text]::placeholder{color:#5c5280;}
   color:var(--ink-dim);
   margin-top:2px;
   line-height:1.4;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .sr-msg{
   font-size:12px;
@@ -525,4 +535,39 @@ input[type=text]::placeholder{color:#5c5280;}
   #cardCanvas, #boxCanvas{max-width:min(420px, 88vw);}
   .canvas-shell{filter:drop-shadow(0 14px 28px rgba(0,0,0,0.5));}
   .swatch{width:34px;height:34px;} /* blancos de toque mas comodos */
+}
+
+/* ---- mini-preview sticky (móvil) ---- */
+.mini-preview{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  width:88px;
+  padding:4px;
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);
+  z-index:60;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+}
+.mini-preview canvas{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:8px;
+}
+.mini-tag{
+  display:block;
+  text-align:center;
+  font-size:9px;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  color:var(--ink-dim);
+  margin-top:4px;
+}
+/* en desktop el preview grande siempre está a la vista, así que no hace falta */
+@media (min-width:881px){
+  .mini-preview{display:none !important;}
 }

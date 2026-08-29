@@ -67,6 +67,9 @@
       } else {
         draw();
       }
+      // mantiene el mini-preview al día si está visible
+      const mini = document.getElementById('miniPreview');
+      if (mini && !mini.hidden) updateMiniPreview();
     }
 
   // ---- image upload ----
@@ -237,9 +240,12 @@
   const boxZoom = document.getElementById('boxZoom');
   const boxZoomVal = document.getElementById('boxZoomVal');
   function applyBoxZoom(){
-    const v = parseInt(boxZoom.value, 10) / 100;      // 100..300 -> 1..3
+    const v = parseInt(boxZoom.value, 10) / 100;      // 100..200 -> 1..2
     CaseRender.setZoom(v);
     boxZoomVal.textContent = boxZoom.value + '%';
+    // si el mini-preview está visible, actualizarlo al instante
+    const mini = document.getElementById('miniPreview');
+    if (mini && !mini.hidden) updateMiniPreview();
   }
   boxZoom.addEventListener('input', applyBoxZoom);
 
@@ -456,6 +462,43 @@
       };
       reader.readAsDataURL(file);
     });
+
+    // ---- mini-preview sticky (móvil) ----
+    const miniPreview = document.getElementById('miniPreview');
+    const miniCanvas = document.getElementById('miniCanvas');
+
+    // copia el contenido del canvas activo a la miniatura (sin guías para custom)
+    function updateMiniPreview(){
+      let srcCanvas;
+      if (format === 'custom'){
+        // dibuja el resultado (sin guías) directamente en la miniatura
+        CustomRender.renderThumb(miniCanvas);
+        return;
+      } else {
+        srcCanvas = document.getElementById(format === 'box' ? 'boxCanvas' : 'cardCanvas');
+        const g = miniCanvas.getContext('2d');
+        g.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+        g.drawImage(srcCanvas, 0, 0, miniCanvas.width, miniCanvas.height);
+      }
+    }
+
+    // muestra la miniatura solo cuando el preview grande sale de la vista (móvil)
+    const previewCol = document.querySelector('.preview-col');
+    let lastMiniToggled = false;
+    function syncMiniVisibility(entry){
+      const isMobile = window.innerWidth < 881;
+      const outOfView = !entry.isIntersecting;
+      const show = isMobile && outOfView;
+      if (show !== lastMiniToggled){
+        miniPreview.hidden = !show;
+        lastMiniToggled = show;
+        if (show) updateMiniPreview();
+      }
+    }
+    const observer = new IntersectionObserver(entries => syncMiniVisibility(entries[0]), { threshold: 0 });
+    if (previewCol) observer.observe(previewCol);
+    // al agrandar la miniatura, volve al preview grande
+    miniPreview.addEventListener('click', () => { previewCol && previewCol.scrollIntoView({ behavior: 'smooth' }); });
 
     // estado inicial desde los inputs y primer render
     syncFromInputs();
