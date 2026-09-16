@@ -213,7 +213,7 @@
     const drawOnly = () => {
       ctx.clearRect(0,0,BW,BH);
       const art = makeArt();
-      if (art && overlayReady) drawQuadPerspective(art, quad(), 150);
+      if (art && overlayReady) drawQuadPerspective(ctx, art, quad(), 150);
       if (overlayReady && state.overlayImage) ctx.drawImage(state.overlayImage,0,0);
     };
     if (hasGuides){
