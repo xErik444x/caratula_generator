@@ -39,13 +39,21 @@
 <body>
 <div class="wrap">
 
-  <div class="masthead">
-    <h1>Cover Generator</h1>
-    <span></span>
+  <!-- NAV de vistas: sticky arriba de todo -->
+  <div class="tabs-gen" id="tabsGen">
+    <button type="button" class="tab-gen active" data-tab="gen" id="tabBtnGen">🎨 Generator</button>
+    <button type="button" class="tab-gen" data-tab="gal" id="tabBtnGal">🖼️ Gallery</button>
   </div>
-  <p class="subhead">Upload the artwork, type the game's title and info. The cover builds itself in the panel on the right, ready to download as a PNG.</p>
 
-  <div class="layout">
+  <!-- VIEW: GENERATOR -->
+  <section id="viewGen">
+    <div class="masthead">
+      <h1>Cover Generator</h1>
+      <span></span>
+    </div>
+    <p class="subhead">Upload the artwork, type the game's title and info. The cover builds itself in the panel on the right, ready to download as a PNG.</p>
+
+    <div class="layout" id="paneGen">
 
     <!-- CONTROLS -->
     <div class="panel">
@@ -179,6 +187,7 @@
             </div>
 
             <button class="btn-download" id="downloadBtn">⬇ Download Cover PNG</button>
+            <button class="btn-upload" id="uploadBtn">⬆ Upload to Gallery</button>
     </div>
 
     <!-- PREVIEW -->
@@ -192,6 +201,74 @@
         </div>
 
   </div>
+  </section>
+
+  <!-- VIEW: GALLERY (sección propia, render separado) -->
+  <section id="viewGal" class="gallery-pane" hidden>
+    <div class="masthead">
+      <h1>Covers Gallery</h1>
+      <span></span>
+    </div>
+    <p class="subhead">Browse, search and download covers published by the community. Select several to grab a ZIP or build an EmulationStation <b>gamelist.xml</b> for your R36S.</p>
+
+    <div class="gal-toolbar" id="paneGal">
+      <input type="text" id="galSearch" placeholder="Search by name…" autocomplete="off">
+      <select id="galTag">
+        <option value="">All tags</option>
+        <option value="nintendo">nintendo</option>
+        <option value="sony">sony</option>
+        <option value="sega">sega</option>
+        <option value="psx">psx</option>
+        <option value="snes">snes</option>
+        <option value="gba">gba</option>
+        <option value="nds">nds</option>
+        <option value="arcade">arcade</option>
+        <option value="retro">retro</option>
+        <option value="anime">anime</option>
+        <option value="pixel-art">pixel-art</option>
+        <option value="minimal">minimal</option>
+      </select>
+      <button type="button" class="gal-btn" id="galReload">↻ Reload</button>
+      <span class="gal-count" id="galCount"></span>
+      <span class="gal-spacer"></span>
+      <button type="button" class="gal-btn" id="galUpload">⬆ Upload</button>
+      <button type="button" class="gal-btn" id="galSelAll">Select all</button>
+      <button type="button" class="gal-btn" id="galXml" disabled>▦ gamelist.xml</button>
+      <button type="button" class="gal-btn gal-primary" id="galDownload" disabled>⬇ Download ZIP</button>
+    </div>
+    <p class="gal-empty" id="galEmpty" hidden></p>
+    <div class="gal-grid" id="galGrid"></div>
+    <p class="gal-source">Covers from <a href="https://covers-gallery.erik444.workers.dev" target="_blank" rel="noopener">covers-gallery</a> · upload yours with the ⬆ Upload button (or the <a href="https://covers-gallery.erik444.workers.dev/subir" target="_blank" rel="noopener">upload page</a>)</p>
+  </section>
+</div>
+
+<!-- UPLOAD TO GALLERY: modal con tags/autor -->
+<div class="upl-overlay" id="uplOverlay" hidden>
+  <div class="upl-modal">
+    <h3>Upload to Covers Gallery</h3>
+    <p class="upl-hint">Your cover goes through automatic moderation before publishing.</p>
+    <div class="upl-srcpick" id="uplSrcRow">
+      <button type="button" class="upl-src on" id="uplSrcGen">🎨 Use generated cover</button>
+      <button type="button" class="upl-src" id="uplSrcFile">📁 Upload image file</button>
+    </div>
+    <div class="upl-filewrap" id="uplFileWrap" hidden>
+      <input type="file" id="uplFile" accept="image/jpeg,image/png,image/webp">
+      <img id="uplThumb" alt="" hidden>
+      <p class="upl-filehint" id="uplFileHint">JPEG/PNG/WEBP up to 8MB — from your camera roll or files.</p>
+    </div>
+    <label for="uplTitle">Game title</label>
+    <input type="text" id="uplTitle" maxlength="80">
+    <label>Tags (choose up to 4)</label>
+    <div class="upl-tags" id="uplTags"></div>
+    <label for="uplAuthor">Your nickname (optional)</label>
+    <input type="text" id="uplAuthor" maxlength="24" placeholder="anonymous">
+    <div id="uplTs" class="upl-ts"></div>
+    <p class="upl-msg" id="uplMsg"></p>
+    <div class="upl-btns">
+      <button type="button" class="upl-cancel" id="uplCancel">Cancel</button>
+      <button type="button" class="upl-confirm" id="uplConfirm">Upload</button>
+    </div>
+  </div>
 </div>
 
 <!-- Mini-preview sticky: se muestra en móvil cuando el preview grande sale de vista -->
@@ -200,12 +277,16 @@
   <span class="mini-tag">Live preview</span>
 </div>
 
+<script>
+  document.write('<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></' + 'script>');
+</script>
 <!-- scripts importados con ?v=<fecha> para saltar la cache de Github Pages -->
 <script>
   document.write('<script src="js/color-utils.js' + __v + '"><\/script>');
   document.write('<script src="js/card-render.js' + __v + '"><\/script>');
   document.write('<script src="js/case-render.js' + __v + '"><\/script>');
   document.write('<script src="js/custom-render.js' + __v + '"><\/script>');
+  document.write('<script src="js/gallery.js' + __v + '"><\/script>');
   document.write('<script src="js/app.js' + __v + '"><\/script>');
 </script>
 </body>

@@ -571,3 +571,101 @@ input[type=text]::placeholder{color:#5c5280;}
 @media (min-width:881px){
   .mini-preview{display:none !important;}
 }
+
+/* ---- Nav de vistas Generator / Gallery (sticky arriba) ---- */
+.tabs-gen{position:sticky;top:0;z-index:20;display:flex;gap:8px;margin:14px 0 10px;padding:8px 0;background:linear-gradient(180deg,var(--bg) 82%,transparent)}
+.tab-gen{background:#17131f;color:#b7a6d9;border:1px solid #2b2338;padding:9px 18px;border-radius:9px;cursor:pointer;font:inherit;font-size:.92rem}
+.tab-gen.active{background:#8b2fd6;border-color:#8b2fd6;color:#fff;font-weight:600}
+.tab-gen:hover:not(.active){border-color:#8b2fd655}
+
+/* ---- Galería como sección propia (render separado del generador) ---- */
+.gallery-pane{padding:0 0 40px}
+.gal-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.gal-toolbar input[type=text],.gal-toolbar select{background:#17131f;border:1px solid #2b2338;border-radius:9px;color:#efe6ff;padding:9px 12px;font:inherit;font-size:.9rem}
+.gal-toolbar input[type=text]{flex:1;min-width:170px}
+.gal-btn{background:#17131f;color:#b7a6d9;border:1px solid #2b2338;border-radius:9px;padding:9px 14px;cursor:pointer;font:inherit;font-size:.88rem}
+.gal-btn:hover:not(:disabled){border-color:#8b2fd6;color:#efe6ff}
+.gal-btn:disabled{opacity:.45;cursor:not-allowed}
+.gal-primary{background:#8b2fd6;border-color:#8b2fd6;color:#fff;font-weight:600}
+.gal-count{color:#8d7fa8;font-size:.82rem;margin:0 4px}
+.gal-spacer{flex:1}
+.gal-empty{color:#8d7fa8;text-align:center;padding:42px 0}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.gal-card{position:relative;background:#17131f;border:1px solid #2b2338;border-radius:10px;overflow:hidden;transition:border-color .12s, transform .12s}
+.gal-card:hover{transform:translateY(-2px);border-color:#8b2fd6}
+.gal-card.checked{border-color:#c98bff;box-shadow:0 0 0 1px #c98bff inset}
+.gal-chk{position:absolute;top:8px;left:8px;z-index:2;width:17px;height:17px;accent-color:#8b2fd6;cursor:pointer}
+.gal-thumb img{width:100%;aspect-ratio:5/7;object-fit:cover;display:block;background:#241c31;cursor:pointer}
+.gal-meta{padding:7px 9px}
+.gal-title{font-size:.78rem;font-weight:600;color:#efe6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gal-tags{font-size:.66rem;color:#8d7fa8;margin-top:2px}
+.gal-source{text-align:center;color:#8d7fa8;font-size:.74rem;margin-top:26px}
+.gal-source a{color:#c98bff}
+@media (max-width:880px){.gal-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+
+/* ---- Boton upload + modal ---- */
+.btn-upload{display:block;width:100%;margin-top:10px;background:#17131f;color:#c98bff;border:1px solid #8b2fd6;border-radius:11px;padding:13px 16px;cursor:pointer;font:inherit;font-size:.95rem;font-weight:600}
+.btn-upload:hover{background:#241c31}
+.btn-upload:disabled{opacity:.5;cursor:wait}
+.upl-overlay{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+/* el display:flex de la clase pisa el display:none del [hidden] del UA → overlay INVISIBLE
+   pero tapando todo el viewport ("popups al entrar"). Regla explícita: */
+.upl-overlay[hidden]{display:none;}
+.upl-modal{background:#17131f;border:1px solid #2b2338;border-radius:14px;padding:22px;width:100%;max-width:420px}
+.upl-modal h3{color:#efe6ff;font-size:1.05rem}
+.upl-hint{color:#8d7fa8;font-size:.78rem;margin-top:3px}
+.upl-modal label{display:block;color:#8d7fa8;font-size:.74rem;margin:13px 0 4px}
+.upl-modal input[type=text]{width:100%;background:#0e0a15;border:1px solid #2b2338;border-radius:8px;color:#efe6ff;padding:9px 11px;font:inherit}
+.upl-tags{display:flex;flex-wrap:wrap;gap:6px}
+.upl-tag{cursor:pointer;font-size:.72rem;padding:4px 11px;border-radius:999px;border:1px solid #2b2338;background:#0e0a15;color:#8d7fa8}
+.upl-tag.on{background:#8b2fd633;border-color:#c98bff;color:#efe6ff}
+.upl-msg{min-height:18px;font-size:.82rem;margin-top:10px;color:#8d7fa8}
+.upl-msg.err{color:#ff6b7e}
+.upl-msg.ok{color:#7fe6ab}
+.upl-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.upl-cancel{background:none;border:1px solid #2b2338;color:#8d7fa8;border-radius:8px;padding:8px 15px;cursor:pointer;font:inherit}
+.upl-confirm{background:#8b2fd6;border:1px solid #8b2fd6;color:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font:inherit;font-weight:600}
+.upl-confirm:disabled{opacity:.5;cursor:wait}
+
+/* ---- modal gamelist.xml (EmulationStation/Batocera/R36S) ---- */
+.xml-modal{max-width:520px;max-height:82vh;overflow:auto}
+.xml-modal label{display:block}
+.xml-row{display:flex;align-items:center;gap:9px;margin-top:7px}
+.xml-gametitle{flex:0 0 44%;font-size:.8rem;color:#efe6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xml-romin{flex:1;min-width:0;background:#0e0a15;border:1px solid #2b2338;border-radius:8px;color:#efe6ff;padding:8px 10px;font:inherit;font-size:.82rem}
+.hint b,.upl-hint b{color:#c98bff}
+
+/* ---- móvil: modal XML apilado + checkbox crece ---- */
+@media (max-width:520px){
+  .xml-row{flex-direction:column;align-items:stretch;gap:4px}
+  .xml-gametitle{flex:none;white-space:normal}
+  .upl-modal{max-height:88vh;padding:18px 16px}
+  .upl-btns{flex-wrap:wrap}
+  .upl-btns .upl-confirm,.upl-btns .upl-cancel{flex:1;padding:11px 10px}
+  .gal-toolbar .gal-btn{padding:11px 13px}
+}
+
+/* ---- touch: feedback :active y targets >= 40px (DESPUES de las reglas base de la galería) ---- */
+@media (hover:none){
+  .gal-card:hover{transform:none;border-color:#2b2338;}
+  .gal-card:active{transform:scale(.985);border-color:#8b2fd6;}
+  .gal-btn:active:not(:disabled){border-color:#8b2fd6;color:#efe6ff;}
+  .gal-chk{width:22px;height:22px;top:9px;left:9px;}
+  .gal-btn{padding:12px 16px;}
+}
+
+/* ---- turnstile en el modal upload ---- */
+.upl-ts{margin:12px 0 2px;min-height:65px}
+.upl-ts iframe{max-width:100%}
+
+/* ---- selector de fuente en el modal upload (generada vs archivo) ---- */
+.upl-srcpick{display:flex;gap:8px;margin:2px 0 10px}
+.upl-src{flex:1;background:#17131f;color:#b7a6d9;border:1px solid #2b2338;padding:9px 8px;border-radius:9px;cursor:pointer;font:inherit;font-size:.85rem}
+.upl-src.on{background:#2b2338;color:#fff;border-color:#7c5cff}
+.upl-filewrap{margin:0 0 10px}
+.upl-filewrap input[type=file]{width:100%;font:inherit;font-size:.85rem;color:#b7a6d9}
+.upl-filewrap::file-selector-button{background:#2b2338;color:#fff;border:1px solid #3a3050;border-radius:8px;padding:8px 14px;cursor:pointer;margin-right:10px}
+.upl-thumb{display:block;max-width:120px;max-height:160px;border-radius:8px;border:1px solid #2b2338;margin-top:8px}
+.upl-filehint{color:#8b8098;font-size:.75rem;margin-top:6px}
+#uplThumb{display:block;max-width:120px;max-height:160px;border-radius:8px;border:1px solid #2b2338;margin-top:8px}
+#uplThumb[hidden]{display:none}

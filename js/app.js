@@ -505,4 +505,298 @@
     window.CardRender.init();
     CaseRender.init();
     CustomRender.init();
+
+    // ---- nav de vistas: Generator / Gallery (secciones completas, no tabs de pane) ----
+    var viewGen = document.getElementById('viewGen');
+    var viewGal = document.getElementById('viewGal');
+    var paneGal = document.getElementById('paneGal');
+    var tabsGen = document.getElementById('tabsGen');
+    if (tabsGen && viewGen && viewGal && window.Gallery){
+      tabsGen.addEventListener('click', function(e){
+        var btn = e.target.closest('.tab-gen');
+        if (!btn) return;
+        var tab = btn.dataset.tab;
+        tabsGen.querySelectorAll('.tab-gen').forEach(function(b){ b.classList.toggle('active', b === btn); });
+        viewGen.hidden = tab !== 'gen';
+        viewGal.hidden = tab !== 'gal';
+        if (tab === 'gal') window.scrollTo({ top: 0 }); // la sección arranca arriba, como una página propia
+        if (tab === 'gal') window.Gallery.reload(); // lista fresca cada vez que entra
+      });
+      window.Gallery.init();
+    }
+
+    // ---- upload de la cover generada a Covers Gallery ----
+    var UPLOAD_API = 'https://covers-gallery.erik444.workers.dev/api/upload';
+    var GALLERY_API = 'https://covers-gallery.erik444.workers.dev';
+    var UPL_TAGS = ['nintendo','sony','sega','psx','snes','gba','nds','arcade','retro','anime','pixel-art','minimal'];
+    var uplOverlay = document.getElementById('uplOverlay');
+    var uplTags = document.getElementById('uplTags');
+    var uplMsg = document.getElementById('uplMsg');
+    var uplSel = new Set();
+
+    if (uplOverlay && uplTags){
+      // chips de tags
+      UPL_TAGS.forEach(function(t){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'upl-tag';
+        b.textContent = '#' + t;
+        b.addEventListener('click', function(){
+          if (uplSel.has(t)) uplSel.delete(t);
+          else if (uplSel.size < 4) uplSel.add(t);
+          b.classList.toggle('on', uplSel.has(t));
+        });
+        uplTags.appendChild(b);
+      });
+
+      document.getElementById('uploadBtn').addEventListener('click', function(){
+        // prellenado del título con el del generador
+        var t = document.getElementById('uplTitle');
+        if (t && !t.value) t.value = titleInput.value === 'GAME TITLE' ? '' : titleInput.value;
+        setSrc('gen');
+        uplMsg.textContent = '';
+        uplMsg.className = 'upl-msg';
+        uplOverlay.hidden = false;
+        renderTurnstile();
+        applyLockUI(); // kill-switch: deshabilita botones si la API está bloqueada
+      });
+      // botón ⬆ Upload en la toolbar de la Galería: mismo modal, modo archivo
+      var galUploadBtn = document.getElementById('galUpload');
+      if (galUploadBtn){
+        galUploadBtn.addEventListener('click', function(){
+          document.getElementById('uplTitle').value = '';
+          document.getElementById('uplAuthor').value = '';
+          uplSel.clear();
+          document.querySelectorAll('#uplTags .upl-tag').forEach(function(b){ b.classList.remove('on'); });
+          setSrc('gen');
+          uplMsg.textContent = '';
+          uplMsg.className = 'upl-msg';
+          uplOverlay.hidden = false;
+          renderTurnstile();
+          applyLockUI(); // kill-switch: deshabilita botones si la API está bloqueada
+        });
+      }
+
+      // ---- kill-switch UI: si la API bloqueó las subidas, todos los botones
+      // ---- del modal se deshabilitan y se muestra el aviso (chequeo al abrir)
+      var uplLockCache = null; // null = desconocido, true/false tras el primer chequeo
+      function applyLockUI(){
+        var confirmBtn = document.getElementById('uplConfirm');
+        var titleEl = document.getElementById('uplTitle');
+        var authorEl = document.getElementById('uplAuthor');
+        function setLocked(locked){
+          uplLockCache = locked;
+          confirmBtn.disabled = locked;
+          titleEl.disabled = locked;
+          authorEl.disabled = locked;
+          document.querySelectorAll('#uplTags .upl-tag').forEach(function(b){ b.disabled = locked; });
+          document.querySelectorAll('#uplSrcRow .upl-src').forEach(function(b){ b.disabled = locked; });
+          if (locked){
+            uplMsg.textContent = '🔒 Uploads are temporarily disabled by the administrator.';
+            uplMsg.className = 'upl-msg err';
+          }
+        }
+        if (uplLockCache !== null){
+          setLocked(uplLockCache);
+          return;
+        }
+        try{
+          var x = new XMLHttpRequest();
+          x.open('GET', GALLERY_API + '/api/status', true);
+          x.onload = function(){
+            var locked = false;
+            try{ locked = !!JSON.parse(x.responseText).uploadsLocked; }catch(e){}
+            setLocked(locked);
+          };
+          x.onerror = function(){ setLocked(false); }; // si /api/status no responde, no bloqueo la UI
+          x.send();
+        }catch(e){ setLocked(false); }
+      }
+      document.getElementById('uplCancel').addEventListener('click', function(){
+        uplOverlay.hidden = true;
+      });
+      uplOverlay.addEventListener('click', function(e){
+        if (e.target === uplOverlay) uplOverlay.hidden = true;
+      });
+
+      // ---- fuente de la imagen: cover generada o archivo del dispositivo ----
+      var uplSrc = 'gen'; // 'gen' | 'file'
+      var uplFileBuf = null; // ArrayBuffer del archivo elegido
+      var srcGen = document.getElementById('uplSrcGen');
+      var srcFile = document.getElementById('uplSrcFile');
+      var fileWrap = document.getElementById('uplFileWrap');
+      var fileInput = document.getElementById('uplFile');
+      var uplThumb = document.getElementById('uplThumb');
+      function setSrc(mode){
+        uplSrc = mode;
+        srcGen.classList.toggle('on', mode === 'gen');
+        srcFile.classList.toggle('on', mode === 'file');
+        fileWrap.hidden = mode !== 'file';
+        if (mode === 'gen') { uplFileBuf = null; fileInput.value = ''; uplThumb.hidden = true; }
+        uplMsg.textContent = '';
+        uplMsg.className = 'upl-msg';
+      }
+      srcGen.addEventListener('click', function(){ setSrc('gen'); });
+      srcFile.addEventListener('click', function(){ setSrc('file'); });
+      fileInput.addEventListener('change', function(){
+        var f = fileInput.files && fileInput.files[0];
+        if (!f){ uplFileBuf = null; uplThumb.hidden = true; return; }
+        if (f.size > 8 * 1024 * 1024){
+          uplMsg.textContent = 'Max file size is 8MB.';
+          uplMsg.className = 'upl-msg err';
+          uplFileBuf = null;
+          return;
+        }
+        var rd = new FileReader();
+        rd.onload = function(){
+          uplThumb.src = String(rd.result);
+          uplThumb.hidden = false;
+        };
+        rd.readAsDataURL(f);
+        f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+      });
+
+      // ---- Turnstile (captcha invisible/managed de Cloudflare) ----
+      // Widget dentro de un modal hidden: Turnstile no renderiza en display:none,
+      // así que se monta/recicla cada vez que se abre el modal.
+      var TS_SITEKEY = '0x4AAAAAAFAR4BL10Yke01da';
+      var tsWidgetId = null;
+      function renderTurnstile(){
+        var box = document.getElementById('uplTs');
+        if (!box) return;
+        if (typeof window.turnstile === 'undefined'){ setTimeout(renderTurnstile, 250); return; }
+        if (tsWidgetId !== null){ try { turnstile.remove(tsWidgetId); } catch(e){} tsWidgetId = null; }
+        box.innerHTML = '';
+        try {
+          tsWidgetId = turnstile.render(box, {
+            sitekey: TS_SITEKEY,
+            theme: 'dark',
+            language: 'en',
+            'response-field': false,
+          });
+        } catch(e){ /* red sin acceso a challenges.cloudflare.com: el upload fallará con captcha error */ }
+      }
+      function turnstileToken(){
+        if (tsWidgetId === null) return '';
+        try { return turnstile.getResponse(tsWidgetId) || ''; } catch(e){ return ''; }
+      }
+
+      document.getElementById('uplConfirm').addEventListener('click', async function(){
+        var btn = this;
+        var title = document.getElementById('uplTitle').value.trim();
+        var author = document.getElementById('uplAuthor').value.trim();
+        if (!title){ uplMsg.textContent = 'Enter a title.'; uplMsg.className = 'upl-msg err'; return; }
+        if (!uplSel.size){ uplMsg.textContent = 'Choose at least 1 tag.'; uplMsg.className = 'upl-msg err'; return; }
+        var tk = turnstileToken();
+        if (!tk){
+          uplMsg.textContent = 'Waiting for the captcha check — try again in a second.';
+          uplMsg.className = 'upl-msg err';
+          renderTurnstile();
+          return;
+        }
+        if (uplSrc === 'file' && !uplFileBuf){
+          uplMsg.textContent = 'Choose an image file first.';
+          uplMsg.className = 'upl-msg err';
+          return;
+        }
+
+        // imagen: cover generada (canvas→JPEG) o archivo elegido (buf→base64)
+        var dataUrl;
+        if (uplSrc === 'file'){
+          try{
+            var u8 = new Uint8Array(uplFileBuf);
+            var bin = '';
+            var CH = 8192;
+            for (var ci = 0; ci < u8.length; ci += CH){
+              bin += String.fromCharCode.apply(null, u8.subarray(ci, ci + CH));
+            }
+            dataUrl = 'data:' + (fileInput.files[0].type || 'image/jpeg') + ';base64,' + btoa(bin);
+          }catch(err){
+            uplMsg.textContent = 'Could not read the file.';
+            uplMsg.className = 'upl-msg err';
+            return;
+          }
+        } else {
+          try{
+            if (format === 'custom'){
+              dataUrl = CustomRender.cleanDataURL();
+            } else {
+              var canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
+              dataUrl = document.getElementById(canvasId).toDataURL('image/jpeg', 0.92);
+            }
+          }catch(err){
+            uplMsg.textContent = 'Could not export the cover (canvas tainted?).';
+            uplMsg.className = 'upl-msg err';
+            return;
+          }
+        }
+        // ~1.37x por base64; tope duro del worker son 2MB de binario
+        if (Math.round(dataUrl.length * 0.75) > 2 * 1024 * 1024){
+          uplMsg.textContent = 'The cover is over 2MB — try a smaller artwork.';
+          uplMsg.className = 'upl-msg err';
+          return;
+        }
+
+        // POST JSON dataURL fire-and-forget + confirmación por polling:
+        // el Chromium bajo CDP no lee respuestas de ~7s de este worker (fetch Y XHR
+        // fallan al leer, aunque el upload siempre entra y crea la entry). La fuente
+        // de verdad es la API de lectura (GET), que sí es 100% confiable: disparamos
+        // el POST, ignoramos su respuesta, y consultamos /api/list?title=… cada 2s.
+        btn.disabled = true;
+        uplMsg.textContent = 'Uploading and moderating…';
+        uplMsg.className = 'upl-msg';
+        var payload = JSON.stringify({
+          image: dataUrl,
+          title: title,
+          author: author,
+          tags: Array.from(uplSel).join(','),
+        });
+        try{
+          var confirmado = await new Promise(function(resolve){
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', UPLOAD_API, true);
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.setRequestHeader('x-turnstile-token', tk);
+            xhr.send(payload); // respuesta ignorada a conciencia
+            var intentos = 0;
+            var timer = setInterval(function(){
+              intentos++;
+              var q = encodeURIComponent(title);
+              var x = new XMLHttpRequest();
+              x.open('GET', GALLERY_API + '/api/list?limit=100&q=' + q, true);
+              x.onload = function(){
+                try{
+                  var arr = JSON.parse(x.responseText).items || [];
+                  if (arr.length){ clearInterval(timer); resolve(true); }
+                }catch(e){ /* sigue */ }
+                if (intentos >= 12){ clearInterval(timer); resolve(false); }
+              };
+              x.onerror = function(){
+                if (intentos >= 12){ clearInterval(timer); resolve(false); }
+              };
+              x.send();
+            }, 2500);
+          });
+          if (confirmado){
+            uplMsg.textContent = 'Published! It is already in the gallery ✓';
+            uplMsg.className = 'upl-msg ok';
+            setTimeout(function(){
+              uplOverlay.hidden = true;
+              uplMsg.textContent = '';
+              uplMsg.className = 'upl-msg';
+              // si la tab galería está visible, refresca
+              if (paneGal && !paneGal.hidden && window.Gallery) window.Gallery.reload();
+            }, 1400);
+          } else {
+            uplMsg.textContent = 'Upload may have failed — check the gallery tab.';
+            uplMsg.className = 'upl-msg err';
+            btn.disabled = false;
+          }
+        }catch(err){
+          uplMsg.textContent = 'Upload error: ' + err.message;
+          uplMsg.className = 'upl-msg err';
+          btn.disabled = false;
+        }
+      });
+    }
 })();
