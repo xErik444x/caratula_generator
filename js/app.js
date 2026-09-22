@@ -543,8 +543,8 @@
     }
 
     // ---- upload de la cover generada a Covers Gallery ----
-    var UPLOAD_API = 'https://covers-gallery.erik444.workers.dev/api/upload';
-    var GALLERY_API = 'https://covers-gallery.erik444.workers.dev';
+    var UPLOAD_API = 'https://covers-gallery.erik444.xyz/api/upload';
+    var GALLERY_API = 'https://covers-gallery.erik444.xyz';
     var UPL_TAGS = ['nintendo','sony','sega','psx','snes','gba','nds','arcade','retro','anime','pixel-art','minimal'];
     var uplOverlay = document.getElementById('uplOverlay');
     var uplTags = document.getElementById('uplTags');

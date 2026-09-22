@@ -1,10 +1,10 @@
-// gallery.js — Tab "Galería": listar covers de covers-gallery.erik444.workers.dev,
+// gallery.js — Tab "Galería": listar covers de covers-gallery.erik444.xyz,
 // buscar por nombre/tag y descarga múltiple (ZIP STORE sin dependencias).
 // API: GET /api/list?q=&tag=&limit= · GET /img/:id (CORS abierto, hotlink OK)
 (function(){
   'use strict';
 
-  var API = 'https://covers-gallery.erik444.workers.dev';
+  var API = 'https://covers-gallery.erik444.xyz';
 
   // ---------- estado ----------
   var items = [];
