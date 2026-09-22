@@ -616,7 +616,10 @@ input[type=text]::placeholder{color:#5c5280;}
 .upl-hint{color:#8d7fa8;font-size:.78rem;margin-top:3px}
 .upl-modal label{display:block;color:#8d7fa8;font-size:.74rem;margin:13px 0 4px}
 .upl-modal input[type=text]{width:100%;background:#0e0a15;border:1px solid #2b2338;border-radius:8px;color:#efe6ff;padding:9px 11px;font:inherit}
-.upl-tags{display:flex;flex-wrap:wrap;gap:6px}
+.upl-tags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.upl-customtag{display:flex;gap:6px;margin:6px 0 2px}
+.upl-customtag input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:.85rem}
+.upl-tinput::placeholder{color:var(--muted)}
 .upl-tag{cursor:pointer;font-size:.72rem;padding:4px 11px;border-radius:999px;border:1px solid #2b2338;background:#0e0a15;color:#8d7fa8}
 .upl-tag.on{background:#8b2fd633;border-color:#c98bff;color:#efe6ff}
 .upl-msg{min-height:18px;font-size:.82rem;margin-top:10px;color:#8d7fa8}

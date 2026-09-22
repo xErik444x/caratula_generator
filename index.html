@@ -258,8 +258,13 @@
     </div>
     <label for="uplTitle">Game title</label>
     <input type="text" id="uplTitle" maxlength="80">
-    <label>Tags (choose up to 4)</label>
+    <label>Tags (choose up to 4 — presets or your own)</label>
     <div class="upl-tags" id="uplTags"></div>
+    <div class="upl-customtag">
+      <input type="text" id="uplCustomTag" maxlength="24" placeholder="custom tag…" list="uplTagList" autocomplete="off">
+      <button type="button" class="upl-src" id="uplAddTag">+ Add</button>
+    </div>
+    <datalist id="uplTagList"></datalist>
     <label for="uplAuthor">Your nickname (optional)</label>
     <input type="text" id="uplAuthor" maxlength="24" placeholder="anonymous">
     <div id="uplTs" class="upl-ts"></div>

@@ -382,7 +382,7 @@
         list.forEach(item => {
                   const el = document.createElement('div');
                   el.className = 'sr-item';
-                  const platform = (item.platforms && item.platforms.length) ? item.platforms.join(', ') : '—';
+                  const platform = (item.platforms && item.platforms.length) ? item.platforms.map(p => (p && p.name) ? p.name : String(p)).join(', ') : '—';
                   const year = item.releaseDate ? String(item.releaseDate).slice(0,4) : '';
                   let thumb = document.createElement('span');
                   thumb.className = 'thumb-missing';
@@ -534,20 +534,71 @@
     var uplMsg = document.getElementById('uplMsg');
     var uplSel = new Set();
 
-    if (uplOverlay && uplTags){
-      // chips de tags
-      UPL_TAGS.forEach(function(t){
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'upl-tag';
-        b.textContent = '#' + t;
-        b.addEventListener('click', function(){
-          if (uplSel.has(t)) uplSel.delete(t);
-          else if (uplSel.size < 4) uplSel.add(t);
-          b.classList.toggle('on', uplSel.has(t));
-        });
-        uplTags.appendChild(b);
+    // añade un chip de tag (preset o custom) con el handler de toggle común
+    function addTagChip(t, on){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'upl-tag' + (on ? ' on' : '');
+      b.textContent = '#' + t;
+      b.addEventListener('click', function(){
+        if (uplSel.has(t)) uplSel.delete(t);
+        else if (uplSel.size < 4) uplSel.add(t);
+        b.classList.toggle('on', uplSel.has(t));
       });
+      uplTags.appendChild(b);
+      return b;
+    }
+
+    // agrega el tag custom del input como chip seleccionado (valida y evita dupes)
+    function commitCustomTag(){
+      var inp = document.getElementById('uplCustomTag');
+      if (!inp) return;
+      var raw = (inp.value || '').trim().toLowerCase();
+      if (!raw) return;
+      var clean = raw.replace(/[^a-z0-9 _-]/g, '').replace(/\s+/g, ' ').slice(0, 24).trim();
+      inp.value = '';
+      if (!clean) return;
+      var chip = Array.from(uplTags.querySelectorAll('.upl-tag')).find(function(c){ return c.textContent === '#' + clean; });
+      if (chip){
+        if (!uplSel.has(clean) && uplSel.size < 4) chip.click();
+        return;
+      }
+      if (uplSel.size < 4){
+        uplSel.add(clean);
+        addTagChip(clean, true);
+      }
+    }
+
+    if (uplOverlay && uplTags){
+      // chips de tags preset
+      UPL_TAGS.forEach(function(t){ addTagChip(t, false); });
+
+      // input de tag custom: Enter o botón + Add
+      var uplCustomTag = document.getElementById('uplCustomTag');
+      var uplAddTagBtn = document.getElementById('uplAddTag');
+      if (uplCustomTag && uplAddTagBtn){
+        uplAddTagBtn.addEventListener('click', commitCustomTag);
+        uplCustomTag.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); commitCustomTag(); } });
+      }
+
+      // sugerencias de tags en uso (preset + customs ya publicados) para el datalist
+      try{
+        var xt = new XMLHttpRequest();
+        xt.open('GET', GALLERY_API + '/api/tags', true);
+        xt.onload = function(){
+          try{
+            var dl = document.getElementById('uplTagList');
+            if (!dl) return;
+            (JSON.parse(xt.responseText).tags || []).forEach(function(t){
+              var o = document.createElement('option');
+              o.value = t;
+              dl.appendChild(o);
+            });
+          }catch(e){}
+        };
+        xt.send();
+      }catch(e){}
+    }
 
       document.getElementById('uploadBtn').addEventListener('click', function(){
         // prellenado del título con el del generador
@@ -719,10 +770,11 @@
         } else {
           try{
             if (format === 'custom'){
-              dataUrl = CustomRender.cleanDataURL();
+              dataUrl = CustomRender.cleanDataURL(); // custom ya serializa PNG (con alpha)
             } else {
               var canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
-              dataUrl = document.getElementById(canvasId).toDataURL('image/jpeg', 0.92);
+              // card/box: PNG preserva el alpha del arte escalado (antes: JPEG aplanaba a negro)
+              dataUrl = document.getElementById(canvasId).toDataURL('image/png');
             }
           }catch(err){
             uplMsg.textContent = 'Could not export the cover (canvas tainted?).';
@@ -798,5 +850,6 @@
           btn.disabled = false;
         }
       });
-    }
 })();
+
+

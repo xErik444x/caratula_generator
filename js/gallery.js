@@ -110,11 +110,26 @@
   }
 
   // ---------- descarga ----------
+  // ----------
+  function extFromBytes(u8){
+    if (u8 && u8.length > 3){
+      if (u8[0] === 0xFF && u8[1] === 0xD8) return 'jpg';
+      if (u8[0] === 0x89 && u8[1] === 0x50) return 'png';
+      if (u8[0] === 0x52 && u8[1] === 0x49 && u8[8] === 0x57) return 'webp';
+    }
+    return 'png';
+  }
+
   async function downloadOne(it, filename){
     try{
       var r = await fetch(abs(it.image));
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      saveBlob(await r.blob(), filename);
+      var blob = await r.blob();
+      // si el filename vino con .png fijo, respetamos la ext real de los bytes
+      var u8 = new Uint8Array(await blob.arrayBuffer());
+      var ext = extFromBytes(u8);
+      var fixed = filename.replace(/\.(png|jpg|jpeg|webp)$/i, '.' + ext);
+      saveBlob(new Blob([u8], { type: blob.type }), fixed);
     }catch(err){
       alert('Could not download: ' + err.message);
     }
@@ -228,7 +243,8 @@
         var r = await fetch(abs(it.image));
         if (!r.ok) throw new Error('HTTP ' + r.status);
         var buf = new Uint8Array(await r.arrayBuffer());
-        files.push({ name: uniqueName(safeName(it.t || it.title || it.id) + '.png', files), u8: buf });
+        var ext = extFromBytes(buf);
+        files.push({ name: uniqueName(safeName(it.t || it.title || it.id) + '.' + ext, files), u8: buf });
       }catch(err){
         failed++;
       }
@@ -451,6 +467,9 @@
     if (!u || !xmlGames.length) return;
     // ext global: la del input, o la primera inferible de los roms tipeados
     var ext = u.inExt.value.trim().replace(/\./g, '').toLowerCase();
+    // <path> del rom: para XML-only el usuario tipa, sino ext global
+    // (XML-only mode tipa .sfc/.z64/etc). El imageFileName usa la ext real
+    // de los bytes (jpg/png) — NUNCA asume .png si el cover es JPEG.
     if (!ext){
       for (var i = 0; i < xmlGames.length; i++){
         var e = extFromRom(xmlGames[i].rom);
