@@ -216,13 +216,29 @@
       if (art && overlayReady) drawQuadPerspective(ctx, art, quad(), 150);
       if (overlayReady && state.overlayImage) ctx.drawImage(state.overlayImage,0,0);
     };
+    // export a resolución R36S-friendly (640 ancho) con alpha intacto:
+    const EW = 640;
     if (hasGuides){
       drawOnly();
-      const url = canvas.toDataURL('image/png');
+      const scale = EW / canvas.width;
+      const cv = document.createElement('canvas');
+      cv.width = EW; cv.height = Math.round(canvas.height * scale);
+      const cx = cv.getContext('2d');
+      cx.imageSmoothingEnabled = true;
+      cx.imageSmoothingQuality = 'high';
+      cx.drawImage(canvas, 0, 0, cv.width, cv.height);
+      const url = cv.toDataURL('image/png');
       draw(); // restaura con guías
       return url;
     }
-    return canvas.toDataURL('image/png');
+    const scale = EW / canvas.width;
+    const cv = document.createElement('canvas');
+    cv.width = EW; cv.height = Math.round(canvas.height * scale);
+    const cx = cv.getContext('2d');
+    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(canvas, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/png');
   }
 
   window.CustomRender = { init, render, draw, state, setOverlay, reset, cleanDataURL, renderThumb };

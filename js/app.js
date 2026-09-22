@@ -311,6 +311,22 @@
     });
   }
 
+  // Export a R36S-friendly resolution: el canvas de edición es 1024×1536 (mucho
+  // para la consola); el PNG final sale a 640×960 (62.5%) con alpha intacto.
+  const EXPORT_W = 640;
+  function exportCanvas(canvas){
+    if (canvas.width <= EXPORT_W) return canvas;
+    const scale = EXPORT_W / canvas.width;
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(canvas.width * scale);
+    cv.height = Math.round(canvas.height * scale);
+    const cx = cv.getContext('2d');
+    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(canvas, 0, 0, cv.width, cv.height);
+    return cv;
+  }
+
   document.getElementById('downloadBtn').addEventListener('click', async () => {
           const name = (titleInput.value || 'cover').trim().replace(/[^a-z0-9\-_ ]/gi,'').replace(/\s+/g,'_') || 'cover';
           const filename = name + '.png';
@@ -320,7 +336,8 @@
             blob = dataURLtoBlob(CustomRender.cleanDataURL());
           } else {
             const canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
-            blob = await canvasToBlob(document.getElementById(canvasId), filename);
+            // R36S-friendly: exporta escalado (640 ancho), no el canvas 1024 de edición
+            blob = await canvasToBlob(exportCanvas(document.getElementById(canvasId)), filename);
           }
           if (blob) await saveCanvasAsPng(blob, filename);
         });
@@ -773,8 +790,8 @@
               dataUrl = CustomRender.cleanDataURL(); // custom ya serializa PNG (con alpha)
             } else {
               var canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
-              // card/box: PNG preserva el alpha del arte escalado (antes: JPEG aplanaba a negro)
-              dataUrl = document.getElementById(canvasId).toDataURL('image/png');
+              // card/box: PNG preserva el alpha del arte escalado; sale a 640 ancho (R36S-friendly)
+              dataUrl = exportCanvas(document.getElementById(canvasId)).toDataURL('image/png');
             }
           }catch(err){
             uplMsg.textContent = 'Could not export the cover (canvas tainted?).';
