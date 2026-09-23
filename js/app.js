@@ -721,40 +721,59 @@
           uplFileBuf = null;
           return;
         }
-        var rd = new FileReader();
-        rd.onload = function(){
-          uplThumb.src = String(rd.result);
-          uplThumb.hidden = false;
-        };
-        rd.readAsDataURL(f);
         // compresión en el cliente si el binario pasa de ~1.4MB (el tope del worker son 2MB reales,
         // y base64 agrega ~33%): re-render por canvas a 640 ancho + WEBP q85 (mantiene el alpha).
-        var compressIfNeeded = function(blob){
+        // Una SOLA cadena: arrayBuffer → dataURL propio → Image → canvas → toBlob.
+        // (el buf del thumb era otro FileReader concurrente: si aún no había cargado,
+        // String(rd.result) daba 'null' → img.src='null' → GET /null 404 y compresión muerta).
+        var compressIfNeeded = function(blob, dataUrl){
+          dataUrl = dataUrl || null;
           if (blob.size <= 1400 * 1024){
             f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
             return;
           }
+          if (!dataUrl){ // no deberia pasar (dataUrl llega del mismo blob), pero por si acaso
+            f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+            return;
+          }
           var img = new Image();
-          img.onload = function(){
-            var sc = document.createElement('canvas');
-            var w = Math.min(img.width, 640);
-            sc.width = w; sc.height = Math.round(img.height * w / img.width);
-            sc.getContext('2d').drawImage(img, 0, 0, sc.width, sc.height);
-            sc.toBlob(function(wb){
-              if (wb && wb.size < blob.size){
-                wb.arrayBuffer().then(function(ab){
-                  uplFileBuf = ab; // ArrayBuffer: el uploader hace new Uint8Array(uplFileBuf)
-                  uplMsg.textContent = 'Compressed to ' + Math.round(wb.size/1024) + 'KB for upload.';
-                  uplMsg.className = 'upl-msg';
-                });
-              } else {
-                f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
-              }
-            }, 'image/webp', 0.85);
+          img.onerror = function(){
+            // sin imagen cargable: buf = archivo ORIGINAL (el check de 2MB del submit decidira)
+            f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
           };
-          img.src = String(rd.result);
+          img.onload = function(){
+            try{
+              var sc = document.createElement('canvas');
+              var w = Math.min(img.width, 640);
+              sc.width = w; sc.height = Math.max(1, Math.round(img.height * w / img.width));
+              sc.getContext('2d').drawImage(img, 0, 0, sc.width, sc.height);
+              sc.toBlob(function(wb){
+                if (wb && wb.size < blob.size){
+                  wb.arrayBuffer().then(function(ab){
+                    uplFileBuf = ab; // ArrayBuffer: el uploader hace new Uint8Array(uplFileBuf)
+                    uplMsg.textContent = 'Compressed to ' + Math.round(wb.size/1024) + 'KB for upload.';
+                    uplMsg.className = 'upl-msg';
+                  });
+                } else {
+                  // comprimido no mejoró: buf = los bytes del wb re-renderizado o el original
+                  var better = wb || blob;
+                  better.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+                }
+              }, 'image/webp', 0.85);
+            }catch(err){
+              f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+            }
+          };
+          img.src = dataUrl;
         };
-        f.arrayBuffer().then(function(b){ compressIfNeeded(new Blob([b], {type: f.type || 'image/jpeg'})); });
+        var fr = new FileReader();
+        fr.onload = function(){
+          var dUrl = fr.result;
+          uplThumb.src = String(dUrl);
+          uplThumb.hidden = false;
+          compressIfNeeded(f, String(dUrl)); // f ya es File (Blob) — sin doble envoltorio
+        };
+        fr.readAsDataURL(f);
       });
 
       // ---- Turnstile (captcha invisible/managed de Cloudflare) ----
