@@ -789,9 +789,35 @@
           renderTurnstile();
           return;
         }
-        if (uplSrc === 'file' && !uplFileBuf){
+        if (uplSrc === 'file' && !uplFileBuf && !(fileInput.files && fileInput.files[0])){
           uplMsg.textContent = 'Choose an image file first.';
           uplMsg.className = 'upl-msg err';
+          return;
+        }
+        if (uplSrc === 'file' && !uplFileBuf){
+          // hay archivo elegido pero el buf aún se está comprimiendo (toBlob WEBP
+          // es async y puede tardar ~1-3s en imágenes grandes): esperamos el buf
+          // en vez de fallar con error inmediato.
+          uplMsg.textContent = 'Processing image…';
+          uplMsg.className = 'upl-msg';
+          btn.disabled = true;
+          var esperas = 0;
+          var poll = setInterval(function(){
+            esperas++;
+            var noFile = !(fileInput.files && fileInput.files[0]);
+            if (uplFileBuf || noFile || esperas >= 40){ // 40 × 250ms = 10s tope
+              clearInterval(poll);
+              btn.disabled = false;
+              if (!uplFileBuf){
+                uplMsg.textContent = 'Could not process the image — try another file.';
+                uplMsg.className = 'upl-msg err';
+                return;
+              }
+              uplMsg.textContent = '';
+              uplMsg.className = 'upl-msg';
+              btn.click(); // buf listo → re-corre el handler con todo seteado
+            }
+          }, 250);
           return;
         }
 
