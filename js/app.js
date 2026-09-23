@@ -721,7 +721,34 @@
           uplThumb.hidden = false;
         };
         rd.readAsDataURL(f);
-        f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+        // compresión en el cliente si el binario pasa de ~1.4MB (el tope del worker son 2MB reales,
+        // y base64 agrega ~33%): re-render por canvas a 640 ancho + WEBP q85 (mantiene el alpha).
+        var compressIfNeeded = function(blob){
+          if (blob.size <= 1400 * 1024){
+            f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+            return;
+          }
+          var img = new Image();
+          img.onload = function(){
+            var sc = document.createElement('canvas');
+            var w = Math.min(img.width, 640);
+            sc.width = w; sc.height = Math.round(img.height * w / img.width);
+            sc.getContext('2d').drawImage(img, 0, 0, sc.width, sc.height);
+            sc.toBlob(function(wb){
+              if (wb && wb.size < blob.size){
+                wb.arrayBuffer().then(function(ab){
+                  uplFileBuf = ab; // ArrayBuffer: el uploader hace new Uint8Array(uplFileBuf)
+                  uplMsg.textContent = 'Compressed to ' + Math.round(wb.size/1024) + 'KB for upload.';
+                  uplMsg.className = 'upl-msg';
+                });
+              } else {
+                f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
+              }
+            }, 'image/webp', 0.85);
+          };
+          img.src = String(rd.result);
+        };
+        f.arrayBuffer().then(function(b){ compressIfNeeded(new Blob([b], {type: f.type || 'image/jpeg'})); });
       });
 
       // ---- Turnstile (captcha invisible/managed de Cloudflare) ----
@@ -791,7 +818,7 @@
             } else {
               var canvasId = format === 'box' ? 'boxCanvas' : 'cardCanvas';
               // card/box: PNG preserva el alpha del arte escalado; sale a 640 ancho (R36S-friendly)
-              dataUrl = exportCanvas(document.getElementById(canvasId)).toDataURL('image/png');
+              dataUrl = exportCanvas(document.getElementById(canvasId)).toDataURL('image/webp', 0.85);
             }
           }catch(err){
             uplMsg.textContent = 'Could not export the cover (canvas tainted?).';
