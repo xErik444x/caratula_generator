@@ -356,7 +356,13 @@
     }
 
     // carga la carátula elegida como arte, usando el proxy del worker (CORS)
+          function hasCover(it){
+            const c = it && it.cover;
+            return !!c && c !== 'null' && c !== 'undefined';
+          }
+
           function loadCoverAsArt(url, label){
+            if (!url || url === 'null' || url === 'undefined'){ setSearchMsg('That cover has no image.'); return; }
             const img = new Image();
             img.crossOrigin = 'anonymous';   // sin esto el canvas queda "contaminado" y no exporta
             img.onload = () => setArtworkImage(img, label || 'cover');
@@ -404,7 +410,7 @@
                   let thumb = document.createElement('span');
                   thumb.className = 'thumb-missing';
                   thumb.textContent = '🖼️';
-                  if (item.cover){
+                  if (hasCover(item)){
                     thumb = document.createElement('img');
                     thumb.loading = 'lazy';
                     thumb.alt = '';
@@ -424,7 +430,7 @@
                                     el.appendChild(thumb);
                                     el.appendChild(meta);
                                     // sin portada: se deja ver pero no se puede clickear (así la lista no se cierra)
-                                    if (!item.cover){
+                                    if (!hasCover(item)){
                                       el.classList.add('no-cover');
                                       const tag = document.createElement('span');
                                       tag.className = 'sr-no-cover';
