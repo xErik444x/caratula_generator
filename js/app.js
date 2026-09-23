@@ -696,6 +696,7 @@
       // ---- fuente de la imagen: cover generada o archivo del dispositivo ----
       var uplSrc = 'gen'; // 'gen' | 'file'
       var uplFileBuf = null; // ArrayBuffer del archivo elegido
+      var uplFileMime = '';  // mime REAL de esos bytes (image/webp si se comprimió)
       var srcGen = document.getElementById('uplSrcGen');
       var srcFile = document.getElementById('uplSrcFile');
       var fileWrap = document.getElementById('uplFileWrap');
@@ -714,7 +715,7 @@
       srcFile.addEventListener('click', function(){ setSrc('file'); });
       fileInput.addEventListener('change', function(){
         var f = fileInput.files && fileInput.files[0];
-        if (!f){ uplFileBuf = null; uplThumb.hidden = true; return; }
+        if (!f){ uplFileBuf = null; uplFileMime = ''; uplThumb.hidden = true; return; }
         if (f.size > 8 * 1024 * 1024){
           uplMsg.textContent = 'Max file size is 8MB.';
           uplMsg.className = 'upl-msg err';
@@ -728,7 +729,11 @@
         // String(rd.result) daba 'null' → img.src='null' → GET /null 404 y compresión muerta).
         var compressIfNeeded = function(blob, dataUrl){
           dataUrl = dataUrl || null;
-          if (blob.size <= 1400 * 1024){
+          // tope real del worker: 2MB de binario; base64 agrega ~1.37x.
+          // SOLO comprimir si el archivo excede el tope (blob*1.37>2MB): si quepa, sube TAL CUAL
+          // (el cover se guarda con el formato ORIGINAL — PNG sigue PNG, el download respeta bytes)
+          if (blob.size <= 1494 * 1024){
+            uplFileMime = f.type || 'image/jpeg'; // sube tal cual: mime original
             f.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
             return;
           }
@@ -751,12 +756,14 @@
                 if (wb && wb.size < blob.size){
                   wb.arrayBuffer().then(function(ab){
                     uplFileBuf = ab; // ArrayBuffer: el uploader hace new Uint8Array(uplFileBuf)
+                    uplFileMime = 'image/webp'; // bytes webp: el dataURL del payload usa el mime real
                     uplMsg.textContent = 'Compressed to ' + Math.round(wb.size/1024) + 'KB for upload.';
                     uplMsg.className = 'upl-msg';
                   });
                 } else {
                   // comprimido no mejoró: buf = los bytes del wb re-renderizado o el original
                   var better = wb || blob;
+                  if (wb && better === wb) uplFileMime = 'image/webp';
                   better.arrayBuffer().then(function(b){ uplFileBuf = b; uplMsg.textContent = ''; uplMsg.className = 'upl-msg'; });
                 }
               }, 'image/webp', 0.85);
@@ -856,7 +863,9 @@
             for (var ci = 0; ci < u8.length; ci += CH){
               bin += String.fromCharCode.apply(null, u8.subarray(ci, ci + CH));
             }
-            dataUrl = 'data:' + (fileInput.files[0].type || 'image/jpeg') + ';base64,' + btoa(bin);
+            // mime REAL de los bytes del buf: si se comprimió a webp, el dataURL es webp
+            // (si no, el worker serializaba PNG-mime con bytes webp → cover corrupta en la galería)
+            dataUrl = 'data:' + (uplFileMime || fileInput.files[0].type || 'image/jpeg') + ';base64,' + btoa(bin);
           }catch(err){
             uplMsg.textContent = 'Could not read the file.';
             uplMsg.className = 'upl-msg err';
