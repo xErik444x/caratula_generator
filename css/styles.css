@@ -598,6 +598,7 @@ input[type=text]::placeholder{color:#5c5280;}
 .gal-thumb img{width:100%;aspect-ratio:5/7;object-fit:cover;display:block;background:#241c31;cursor:pointer}
 .gal-meta{padding:7px 9px}
 .gal-title{font-size:.78rem;font-weight:600;color:#efe6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gal-author{font-size:.66rem;color:#b3a3d1;margin-top:1px}
 .gal-tags{font-size:.66rem;color:#8d7fa8;margin-top:2px}
 .gal-source{text-align:center;color:#8d7fa8;font-size:.74rem;margin-top:26px}
 .gal-source a{color:#c98bff}

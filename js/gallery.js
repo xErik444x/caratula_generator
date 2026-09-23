@@ -79,6 +79,8 @@
       var tEl = el('div', 'gal-title', it.t || it.title || it.id);
       tEl.title = tEl.textContent;
       meta.appendChild(tEl);
+      // nick de quien subió ("por joshy") — coherente con la galería pública
+      meta.appendChild(el('div', 'gal-author', it.author ? 'por ' + it.author : ''));
       if (it.tags && it.tags.length){
         meta.appendChild(el('div', 'gal-tags', it.tags.map(function(t){ return '#' + t; }).join(' ')));
       }
