@@ -603,6 +603,18 @@ input[type=text]::placeholder{color:#5c5280;}
 .gal-source{text-align:center;color:#8d7fa8;font-size:.74rem;margin-top:26px}
 .gal-source a{color:#c98bff}
 @media (max-width:880px){.gal-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+/* --- galería móvil: selección por tap en toda la card + scroll infinito --- */
+/* tap ANYWHERE en la card alterna selección (mobile no tiene hover para el checkbox chico) */
+.gal-card{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gal-card .gal-chk{pointer-events:none} /* el click lo maneja la CARD, no el input */
+@media (hover:hover) and (pointer:fine){
+  /* desktop keep: checkbox clickeable directo (comportamiento clásico) */
+  .gal-card .gal-chk{pointer-events:auto}
+}
+.gal-sentinel{display:flex;align-items:center;justify-content:center;gap:8px;color:#8d7fa8;font-size:.8rem;padding:18px 0}
+.gal-spin{width:14px;height:14px;border:2px solid #2b2338;border-top-color:#8b2fd6;border-radius:50%;animation:galspin .7s linear infinite}
+@keyframes galspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gal-spin{animation:none}}
 
 /* ---- Boton upload + modal ---- */
 .btn-upload{display:block;width:100%;margin-top:10px;background:#17131f;color:#c98bff;border:1px solid #8b2fd6;border-radius:11px;padding:13px 16px;cursor:pointer;font:inherit;font-size:.95rem;font-weight:600}

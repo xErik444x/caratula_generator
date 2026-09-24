@@ -215,21 +215,16 @@
       <input type="text" id="galSearch" placeholder="Search by name…" autocomplete="off">
       <select id="galTag">
         <option value="">All tags</option>
-        <option value="nintendo">nintendo</option>
-        <option value="sony">sony</option>
-        <option value="sega">sega</option>
-        <option value="psx">psx</option>
-        <option value="snes">snes</option>
-        <option value="gba">gba</option>
-        <option value="nds">nds</option>
-        <option value="arcade">arcade</option>
-        <option value="retro">retro</option>
-        <option value="anime">anime</option>
+        <option value="android">android</option>
         <option value="pixel-art">pixel-art</option>
-        <option value="minimal">platformer</option>
-        <option value="minimal">android</option>
-        <option value="minimal">shooter</option>
-        <option value="minimal">action</option>
+        <option value="action">action</option>
+        <option value="port">port</option>
+        <option value="horror">horror</option>
+        <option value="retro">retro</option>
+        <option value="fps">fps</option>
+        <option value="adventure">adventure</option>
+        <option value="platformer">platformer</option>
+        <option value="arcade">arcade</option>
       </select>
       <button type="button" class="gal-btn" id="galReload">↻ Reload</button>
       <span class="gal-count" id="galCount"></span>
@@ -241,6 +236,7 @@
     </div>
     <p class="gal-empty" id="galEmpty" hidden></p>
     <div class="gal-grid" id="galGrid"></div>
+    <div class="gal-sentinel" id="galSentinel" hidden><span class="gal-spin"></span>Cargando más covers…</div>
     <p class="gal-source">Covers from the community gallery · upload yours with the ⬆ Upload button</p>
   </section>
 </div>

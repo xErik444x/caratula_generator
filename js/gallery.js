@@ -7,10 +7,14 @@
   var API = 'https://covers-gallery.erik444.xyz';
 
   // ---------- estado ----------
-  var items = [];
+  var items = [];        // lista COMPLETA traída de la API
+  var shown = 0;         // cuántas se están renderizando (scroll infinito)
+  var PAGE = 24;         // lote por pasada de scroll
+  var loadingMore = false;
   var checked = {}; // id -> entry
   var filtros = { q: '', tag: '' };
   var xmlGames = []; // selección capturada al abrir el modal gamelist.xml
+  var io = null;     // IntersectionObserver del sentinel de scroll infinito
 
   // ---------- helpers DOM ----------
   function el(tag, cls, txt){
@@ -47,14 +51,19 @@
       empty.hidden = items.length > 0;
       empty.textContent = emptyMsg;
     }
-    items.forEach(function(it){
-      var card = el('div', 'gal-card');
-      card.dataset.id = it.id;
+    shown = 0;
+    appendBatch();
+  }
+
+  function cardFor(it){
+    var card = el('div', 'gal-card');
+    card.dataset.id = it.id;
 
       var chk = el('input');
       chk.type = 'checkbox';
       chk.className = 'gal-chk';
       chk.checked = !!checked[it.id];
+      if (chk.checked) card.classList.add('checked'); // sync visual al re-render (select-all/filtro)
       chk.title = 'Select';
       chk.addEventListener('change', function(){
         if (chk.checked) checked[it.id] = it; else delete checked[it.id];
@@ -66,11 +75,21 @@
       var imgWrap = el('div', 'gal-thumb');
       var img = el('img');
       img.loading = 'lazy';
+      img.decoding = 'async'; // decode off-main-thread (scroll fluido en mobile)
       img.alt = it.t || it.title || '';
       img.src = abs(it.thumb || it.image);
       img.title = 'Click to download';
-      img.addEventListener('click', function(){
-        downloadOne(it, safeName(it.t || it.title || it.id) + '.png');
+      img.addEventListener('click', function(ev){
+        // tap simple (mouse o touch) = SELECCIONAR (burbujea al card listener)
+        // DOBLE-TAP en la imagen = descarga individual (queda en desktop)
+        var now = Date.now();
+        if (img._lastTap && (now - img._lastTap) < 350){
+          img._lastTap = 0;
+          ev.stopPropagation();
+          downloadOne(it, safeName(it.t || it.title || it.id) + '.png');
+          return;
+        }
+        img._lastTap = now;
       });
       imgWrap.appendChild(img);
       card.appendChild(imgWrap);
@@ -85,9 +104,61 @@
         meta.appendChild(el('div', 'gal-tags', it.tags.map(function(t){ return '#' + t; }).join(' ')));
       }
       card.appendChild(meta);
-      grid.appendChild(card);
+
+    // TAP-TO-SELECT: en mobile el checkbox es chico/lejos → tap en cualquier parte de la
+    // card alterna la selección. El click sobre la IMAGEN mantiene su acción original
+    // (descarga individual) con stopPropagation.
+    card.addEventListener('click', function(ev){
+      // la img ya no "maneja lo suyo" en tap simple: TODO click selecciona; doble-tap = descarga (lo corta el listener del img con stopPropagation)
+      chk.checked = !chk.checked;
+      if (chk.checked) checked[it.id] = it; else delete checked[it.id];
+      card.classList.toggle('checked', chk.checked);
+      updateButtons();
     });
+    return card;
+  }
+
+  // scroll infinito: pinta el próximo lote de cards (via fragmento, sin bloquear el hilo)
+  function appendBatch(){
+    var grid = dom('galGrid');
+    if (!grid) return;
+    var frag = document.createDocumentFragment();
+    var end = Math.min(shown + PAGE, items.length);
+    for (var i = shown; i < end; i++){
+      frag.appendChild(cardFor(items[i]));
+    }
+    shown = end;
+    grid.appendChild(frag);
+    setupSentinel();
     updateButtons();
+  }
+
+  // sentinel + IntersectionObserver: cuando entra al viewport, siguiente lote
+  function setupSentinel(){
+    var sentinel = dom('galSentinel');
+    if (!sentinel) return;
+    if (shown >= items.length){
+      sentinel.hidden = true;
+      if (io) io.disconnect();
+      return;
+    }
+    sentinel.hidden = false;
+    if (!io){
+      io = new IntersectionObserver(function(entries){
+        if (!entries.some(function(e){ return e.isIntersecting; })) return;
+        if (loadingMore || shown >= items.length) return;
+        loadingMore = true;
+        // doble rAF: deja pintar el frame actual antes del lote nuevo (scroll fluido)
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            appendBatch();
+            loadingMore = false;
+          });
+        });
+      }, { rootMargin: '600px 0px' }); // pre-carga 600px antes de llegar al fondo
+    }
+    io.disconnect();
+    io.observe(sentinel);
   }
 
   function dom(id){ return document.getElementById(id); }
