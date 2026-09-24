@@ -612,6 +612,7 @@ input[type=text]::placeholder{color:#5c5280;}
   .gal-card .gal-chk{pointer-events:auto}
 }
 .gal-sentinel{display:flex;align-items:center;justify-content:center;gap:8px;color:#8d7fa8;font-size:.8rem;padding:18px 0}
+.gal-sentinel[hidden]{display:none} /* el atributo hidden pierde contra display:flex si no se re-fuerza */
 .gal-spin{width:14px;height:14px;border:2px solid #2b2338;border-top-color:#8b2fd6;border-radius:50%;animation:galspin .7s linear infinite}
 @keyframes galspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.gal-spin{animation:none}}
