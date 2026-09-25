@@ -588,6 +588,11 @@ input[type=text]::placeholder{color:#5c5280;}
 .gal-btn:disabled{opacity:.45;cursor:not-allowed}
 .gal-primary{background:#8b2fd6;border-color:#8b2fd6;color:#fff;font-weight:600}
 .gal-count{color:#8d7fa8;font-size:.82rem;margin:0 4px}
+/* toggle "PNG" (descarga forzada a PNG): mismo look que .gal-btn pero como label con checkbox */
+.gal-png-toggle{display:flex;align-items:center;gap:6px;background:#17131f;color:#b7a6d9;border:1px solid #2b2338;border-radius:9px;padding:9px 12px;font:inherit;font-size:.88rem;cursor:pointer;user-select:none}
+.gal-png-toggle:hover{border-color:#8b2fd6;color:#efe6ff}
+.gal-png-toggle:has(input:checked){border-color:#8b2fd6;background:#241a33;color:#efe6ff}
+.gal-png-toggle input{accent-color:#8b2fd6;margin:0;cursor:pointer}
 .gal-spacer{flex:1}
 .gal-empty{color:#8d7fa8;text-align:center;padding:42px 0}
 .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}

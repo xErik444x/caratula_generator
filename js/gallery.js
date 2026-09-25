@@ -12,6 +12,7 @@
   var PAGE = 24;         // lote por pasada de scroll
   var loadingMore = false;
   var checked = {}; // id -> entry
+  var galPng;       // checkbox "Download as PNG" (webp → PNG real al bajar)
   var filtros = { q: '', tag: '' };
   var xmlGames = []; // selección capturada al abrir el modal gamelist.xml
   var io = null;     // IntersectionObserver del sentinel de scroll infinito
@@ -201,15 +202,19 @@
       // si el filename vino con .png fijo, respetamos la ext real de los bytes
       var u8 = new Uint8Array(await blob.arrayBuffer());
       var ext = extFromBytes(u8);
+      // modo "PNG forzado": webp/jpg → PNG real (canvas). PNG queda igual.
+      if (galPng.checked && ext !== 'png'){
+        u8 = await toPngBytes(u8, blob.type);
+        ext = 'png';
+      }
       var fixed = filename.replace(/\.(png|jpg|jpeg|webp)$/i, '.' + ext);
-      saveBlob(new Blob([u8], { type: blob.type }), fixed);
+      saveBlob(new Blob([u8], { type: ext === 'png' ? 'image/png' : blob.type }), fixed);
     }catch(err){
       alert('Could not download: ' + err.message);
     }
   }
 
-  function saveBlob(blob, filename){
-    // iOS Safari ignora <a download> con blob: URLs → Share Sheet nativo
+  function saveBlob(blob, filename){    // iOS Safari ignora <a download> con blob: URLs → Share Sheet nativo
     // ("Save to Photos"/"Save to Files"). Desktop/Android: <a download>.
     var isIos = /iP(hone|ad|od)/.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -226,6 +231,28 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+
+  // ---------- webp → PNG (client-side, ~75ms por cover en Pi 5; ~8x más pesado) ----------
+  function toPngBytes(u8, mime){
+    return new Promise(function(resolve, reject){
+      var blob = new Blob([u8], { type: mime || 'image/webp' });
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function(){
+        var cv = document.createElement('canvas');
+        cv.width = img.naturalWidth;
+        cv.height = img.naturalHeight;
+        cv.getContext('2d').drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function(png){
+          if (!png){ reject(new Error('no png')); return; }
+          png.arrayBuffer().then(function(ab){ resolve(new Uint8Array(ab)); }, reject);
+        }, 'image/png');
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('decode fail')); };
+      img.src = url;
+    });
   }
 
   // ---------- CRC32 ----------
@@ -317,6 +344,13 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         var buf = new Uint8Array(await r.arrayBuffer());
         var ext = extFromBytes(buf);
+        // modo "PNG forzado" (toggle galPng): webp/jpg → PNG real; PNG queda igual
+        if (galPng.checked && ext !== 'png'){
+          try{
+            buf = await toPngBytes(buf, r.headers.get('content-type'));
+            ext = 'png';
+          }catch(convErr){ /* silencioso: baja el original */ }
+        }
         files.push({ name: uniqueName(safeName(it.t || it.title || it.id) + '.' + ext, files), u8: buf });
       }catch(err){
         failed++;
@@ -628,6 +662,7 @@
     var btnReload = dom('galReload');
     var btnDl = dom('galDownload');
     var btnSelAll = dom('galSelAll');
+    galPng = dom('galPng'); // checkbox "Download as PNG" (default unchecked = bytes originales)
     if (!q) return;
 
     var t = null;
