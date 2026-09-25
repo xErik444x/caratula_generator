@@ -79,19 +79,22 @@
       img.decoding = 'async'; // decode off-main-thread (scroll fluido en mobile)
       img.alt = it.t || it.title || '';
       img.src = abs(it.thumb || it.image);
-      img.title = 'Click to download';
+      img.title = 'Click para seleccionar · ⬇ para descargar';
       img.addEventListener('click', function(ev){
-        // tap simple (mouse o touch) = SELECCIONAR (burbujea al card listener)
-        // DOBLE-TAP en la imagen = descarga individual (queda en desktop)
-        var now = Date.now();
-        if (img._lastTap && (now - img._lastTap) < 350){
-          img._lastTap = 0;
-          ev.stopPropagation();
-          downloadOne(it, safeName(it.t || it.title || it.id) + '.png');
-          return;
-        }
-        img._lastTap = now;
+        // tap EN LA IMAGEN = seleccionar (comportamiento único, sin doble-tap); la descarga
+        // individual vive en el botón ⬇ de la esquina (tap seguro en mobile, sin zoom-conflicto).
       });
+      // botón ⬇ de descarga individual (esquina sup-izq de la thumb, tap común y corriente):
+      var dlBtn = el('button', 'gal-dl');
+      dlBtn.type = 'button';
+      dlBtn.textContent = '⬇';
+      dlBtn.title = 'Descargar esta cover';
+      dlBtn.setAttribute('aria-label', 'Descargar ' + (it.t || it.title || it.id));
+      dlBtn.addEventListener('click', function(ev){
+        ev.stopPropagation(); // NO seleccionar: solo descarga
+        downloadOne(it, safeName(it.t || it.title || it.id) + '.png');
+      });
+      imgWrap.appendChild(dlBtn);
       imgWrap.appendChild(img);
       card.appendChild(imgWrap);
 
